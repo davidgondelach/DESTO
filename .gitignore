@@ -1,0 +1,9 @@
+# exclude Data folder
+/Data/*.bsp
+/Data/*.bpc
+/Data/*.tpc
+/Data/*.tls
+/Data/*.tf
+/TLEdata/*.mat
+*.m~
+*.DS_Store
