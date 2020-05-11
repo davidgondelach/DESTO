@@ -33,9 +33,22 @@
 
 %------------- BEGIN CODE --------------
 
-clearvars;
-clearvars -global;
+function mainDensityEstimationRadarFnc(yr,mth,dy,hr,mn,sec,nofDays,ROMmodel,r,selectedObjects,SUPERCLOUD,varargin)
 
+% clearvars;
+% clearvars -global;
+
+%% SETTINGS
+% SUPERCLOUD = true;
+
+if nargin > 11
+    highFidelity = varargin{1};
+else
+    highFidelity = false;
+end
+
+% Display date
+datetime(yr,mth,dy)
 
 %% SETTINGS
 % Specify the date, reduced-order model, reduction order and objects to be
@@ -43,29 +56,40 @@ clearvars -global;
 
 % Estimation window
 % Continuous data from:2020-01-03T06:03:06.870935 , till:2020-01-28T06:10:43.642242
-yr      = 2020; % Year
-mth     = 1;    % Month
-dy      = 3;    % Day
-hr      = 6;
-mn      = 0;
-sec     = 0;
-nofDays = 25;   % Number of days
+% yr      = 2020; % Year
+% mth     = 1;    % Month
+% dy      = 3;    % Day
+% hr      = 6;
+% mn      = 0;
+% sec     = 0;
+% nofDays = 25;   % Number of days
 
 
 % Reduced-order model
-ROMmodel = 'JB2008_1999_2010';  % Name of reduced-order density model: JB2008_1999_2010, NRLMSISE_1997_2008 or TIEGCM_1997_2008
-r  = 10;                        % Reduced order
+% ROMmodel = 'JB2008_1999_2010';  % Name of reduced-order density model: JB2008_1999_2010, NRLMSISE_1997_2008 or TIEGCM_1997_2008
+% r  = 10;                        % Reduced order
 
 % NORAD catalog IDs of objects used for estimation
 % Default: 17 objects: [63;165;614;2153;2622;4221;6073;7337;8744;12138;12388;14483;20774;23278;27391;27392;26405]
 % selectedObjects = [63;165;614;2153;2622;4221;6073;7337;8744;12138;12388;14483;20774;23278;27391;27392;26405]; % TLE
-selectedObjects = [614;2153;2622;4221;12138]; % Radar
+% selectedObjects = [614;2153;2622;4221;12138]; % Radar
 
 
 %% SET PATHS
 % *** SPECIFY YOUR SPICE TOOLBOX DIRECTORY HERE! ***
 % spicePath = fullfile('[SPICE TOOLKIT DIRECTORY]','mice'); 
-spicePath = fullfile('/Users/davidgondelach/Documents','mice'); 
+% spicePath = fullfile('/Users/davidgondelach/Documents','mice'); 
+
+global resultsDirPath ephemerisPath
+if SUPERCLOUD
+    spicePath = fullfile('..','..','SPICE','mice');
+    resultsDirPath = 'Results/';
+    ephemerisPath = 'Ephemeris';
+else
+    spicePath = fullfile('/Users','davidgondelach','Documents','mice');
+    resultsDirPath = ['/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/RadarObs/',ROMmodel,'/'];
+    ephemerisPath = '/Users/davidgondelach/Documents/RadarData/LeoLabsEphemeris';
+end
 
 addpath( 'AstroFunctions' );
 addpath( 'Estimation' );
@@ -85,8 +109,11 @@ kernelpath  = fullfile('Data','kernel.txt');
 loadSPICE(kernelpath);
 
 % Load gravity model
-gravmodeldegree  = 48;  % Use degree and order 48 for the spherical harmonics
-gravmodeldegree  = 20;  % Use degree and order 48 for the spherical harmonics
+if highFidelity
+    gravmodeldegree  = 48;  % Use degree and order 48 for the spherical harmonics
+else
+    gravmodeldegree  = 20;  % Use degree and order 20 for the spherical harmonics
+end
 loadGravityModel( gravmodeldegree );
 
 % Load Earth orientation parameters (needed for TEME to ECI transformation)
@@ -108,4 +135,5 @@ runDensityEstimationRadar(yr,mth,dy,hr,mn,sec,nofDays,ROMmodel,r,selectedObjects
 % Clear cspice memory
 cspice_kclear;
 
+end
 %------------- END OF CODE --------------

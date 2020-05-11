@@ -1,4 +1,4 @@
-function runDensityEstimationTLE(yr,mth,dy,nofDays,ROMmodel,r,selectedObjects,varargin)
+function runDensityEstimationRadar(yr,mth,dy,hr,mn,sc,nofDays,ROMmodel,r,selectedObjects,varargin)
 %runDensityEstimationTLE - Estimate thermospheric density using TLE data.
 % 
 %  runDensityEstimationTLE(yr,mth,dy,nofDays,ROMmodel,r,selectedObjects) -
@@ -53,7 +53,7 @@ function runDensityEstimationTLE(yr,mth,dy,nofDays,ROMmodel,r,selectedObjects,va
 
 %------------- BEGIN CODE --------------
 
-if nargin > 7
+if nargin > 10
     plotFigures = varargin{1};
 else
     plotFigures = false;
@@ -66,11 +66,16 @@ try
     GM_kms = GM*1e-9; % Earth gravitational parameter according to accurate gravity model [km^3 s^-2]
     
     %% Datetime
-    % Always start at midnight
-    hr=0; mn=0; sc=0; 
     
-    jd0 = juliandate(datetime(yr,mth,dy,0,0,0));
-    jdf = juliandate(datetime(yr,mth,dy+nofDays,0,0,0));
+    % Julian date
+    jd0 = juliandate(datetime(yr,mth,dy,hr,mn,sc));
+    jdf = juliandate(datetime(yr,mth,dy+nofDays,hr,mn,sc));
+    
+    % Initial Ephemeris Time (ET): ET is the number of seconds past the 
+    % epoch of the J2000 reference frame in the time system known as 
+    % Barycentric Dynamical Time (TDB).
+    et0  = cspice_str2et(strcat([num2str(jed2date(jd0),'%d %d %d %d %d %.10f') 'UTC']));
+    etf  = cspice_str2et(strcat([num2str(jed2date(jdf),'%d %d %d %d %d %.10f') 'UTC']));
     
     % Time Interval for measurements
     dt = 3600;
@@ -99,6 +104,11 @@ try
         getTLEsFromSingleFile = true; % If true: all TLEs are loaded from file named "estimationObjects.tle" else TLEs are loaded from individual files named "[NORADID].tle"
         [objects] = getTLEsForEstimation(yr, mth, 1, yrf, mthf, dyf, selectedObjects, getTLEsFromSingleFile);
     end
+    
+    
+    %% Get Radar ephemeris data
+    global ephemerisPath
+    [ephemerisObjects] = getEphemeris(ephemerisPath,selectedObjects);
 
     
     %% Load BC estimates
@@ -132,7 +142,8 @@ try
     end
 
     %% Generate observations from TLE data
-    obsEpochs = jd0:dt/86400:jdf;
+%     obsEpochs = jd0:dt/86400:jdf;
+    obsEpochs = jd0;
     [meeMeas] = generateObservationsMEE(objects,obsEpochs,GM_kms);
     
     if plotFigures
@@ -155,13 +166,23 @@ try
     end
     
     
+    %% Get observations from ephemeris data
+    useMEE = true;
+    if useMEE
+        % Modified equinoctial element measurements
+        [measEphem,RMEphem] = generateObservationsMEEFromEphemeris(ephemerisObjects,et0,etf,GM_kms);
+    else
+        % Position and velocity measurements
+        [measEphem,RMEphem] = generateObservationsFromEphemeris(ephemerisObjects,et0,etf);
+    end
+    
     %% Load reduced-order density models
     [AC,BC,Uh,F_U,Dens_Mean,M_U,SLTm,LATm,ALTm,maxAtmAlt,SWinputs,Qrom] = generateROMdensityModel(ROMmodel,r,jd0,jdf);
     
     
     %% Generate initial state guess
     % Use orbital state from TLE as initial orbital state guess
-    x0orbits = meeMeas(:,1);
+%     x0orbits = meeMeas(:,1);
     
     % Size of state vector for each object [3xpos,3xvel,1xBC]
     svs = 7;
@@ -169,8 +190,13 @@ try
     % Initial state guess: Orbits, BCs and reduced order density
     x0g = zeros(svs*nop+r,1);
     for i = 1:nop
-        % Orbital state guesses
-        x0g(svs*(i-1)+1:svs*(i-1)+6,1) = x0orbits(6*(i-1)+1:6*(i-1)+6,1);
+        if useMEE
+            % Orbital state guesses in modified equinoctial elements
+            x0g(svs*(i-1)+1:svs*(i-1)+6,1) = meeMeas(6*(i-1)+1:6*(i-1)+6,1);
+        else
+            % Orbital state guesses in position and velocity
+            [x0g(svs*(i-1)+1:svs*(i-1)+3,1),x0g(svs*(i-1)+4:svs*(i-1)+6,1)] = ep2pv( meeMeas(6*(i-1)+1:6*(i-1)+6,1), GM_kms);
+        end
         % Ballistic coefficient guesses
         x0g(svs*i) = BCestimates(i) * 1000;
     end
@@ -202,7 +228,9 @@ try
     
     %% Measurements and covariance
     % TLE-derived orbit observations in modified equinoctial elements
-    Meas = meeMeas;
+%     Meas = meeMeas;
+    measEpochs = measEphem(1,:); % Time of measurement
+    Meas = measEphem(2:end,:); % Measurements
     
     % Measurement noise
     RM = [];
@@ -217,24 +245,42 @@ try
     Pv = zeros(svs*nop+r,1); % state variance
     Qv = zeros(svs*nop+r,1); % process variance
     for i = 1:nop
-        % Initial variance for orbital state in MEE (equal to measurement noise)
-        Pv(svs*(i-1)+1) = RM(6*(i-1)+1,6*(i-1)+1);
-        Pv(svs*(i-1)+2) = RM(6*(i-1)+2,6*(i-1)+2);
-        Pv(svs*(i-1)+3) = RM(6*(i-1)+3,6*(i-1)+3);
-        Pv(svs*(i-1)+4) = RM(6*(i-1)+4,6*(i-1)+4);
-        Pv(svs*(i-1)+5) = RM(6*(i-1)+5,6*(i-1)+5);
-        Pv(svs*(i-1)+6) = RM(6*(i-1)+6,6*(i-1)+6);
+        if useMEE
+            % Initial variance for orbital state in MEE (equal to measurement noise)
+            Pv(svs*(i-1)+1) = RM(6*(i-1)+1,6*(i-1)+1);
+            Pv(svs*(i-1)+2) = RM(6*(i-1)+2,6*(i-1)+2);
+            Pv(svs*(i-1)+3) = RM(6*(i-1)+3,6*(i-1)+3);
+            Pv(svs*(i-1)+4) = RM(6*(i-1)+4,6*(i-1)+4);
+            Pv(svs*(i-1)+5) = RM(6*(i-1)+5,6*(i-1)+5);
+            Pv(svs*(i-1)+6) = RM(6*(i-1)+6,6*(i-1)+6);
+            
+            % Process noise for orbital state in MEE
+            Qv(svs*(i-1)+1) = 1.5e-8;
+            Qv(svs*(i-1)+2) = 2e-14;
+            Qv(svs*(i-1)+3) = 2e-14;
+            Qv(svs*(i-1)+4) = 1e-14;
+            Qv(svs*(i-1)+5) = 1e-14;
+            Qv(svs*(i-1)+6) = 1e-12;
+        else
+            % Initial variance for position and velocity
+            ii = 6*(i-1)+1;
+            jj = 6*(i-1)+6;
+            % Convert assumed MEE covariance to 
+            [~,posVelCov] = meeCov2cartCov(meeMeas(ii:jj,1), RM(ii:jj,ii:jj), GM_kms);
+            Pv(svs*(i-1)+1:svs*(i-1)+6) = diag(posVelCov);
+            
+            % Process noise for position and velocity (~ MEE covariance
+            % converted to position and velocity)
+            Qv(svs*(i-1)+1) = 2e-5;
+            Qv(svs*(i-1)+2) = 2e-5;
+            Qv(svs*(i-1)+3) = 2e-5;
+            Qv(svs*(i-1)+4) = 2e-11;
+            Qv(svs*(i-1)+5) = 2e-11;
+            Qv(svs*(i-1)+6) = 2e-11;
+        end
         
         % Initial variance for ballistic coefficient
         Pv(svs*(i-1)+7) = (x0g(svs*i) * 0.01)^2; % 1% BC 1-sigma error
-        
-        % Process noise for orbital state in MEE
-        Qv(svs*(i-1)+1) = 1.5e-8; 
-        Qv(svs*(i-1)+2) = 2e-14; 
-        Qv(svs*(i-1)+3) = 2e-14; 
-        Qv(svs*(i-1)+4) = 1e-14; 
-        Qv(svs*(i-1)+5) = 1e-14; 
-        Qv(svs*(i-1)+6) = 1e-12;
         
         % Process noise for ballistic coefficient
         Qv(svs*(i-1)+7) = 1e-16; % 1-sigma error: 1e-8 per 1 hour
@@ -257,25 +303,40 @@ try
     % State estimate
     X_est = x0g; % Initial state guess
     
-    % Initial Ephemeris Time (ET): ET is the number of seconds past the 
-    % epoch of the J2000 reference frame in the time system known as 
-    % Barycentric Dynamical Time (TDB).
-    et0  = cspice_str2et(strcat([num2str(jed2date(jd0),'%d %d %d %d %d %.10f') 'UTC']));
-    
     % Set state propagation and measurement functions
-    stateFnc = @(xx,t0,tf) propagateState_MeeBcRom(xx,t0,tf,AC,BC,SWinputs,r,nop,svs,F_U,M_U,maxAtmAlt,et0,jd0);
-    measurementFcn = @(xx) fullmee2mee(xx,nop,svs); % Function to convert from state with MEE,BC,ROM to only MEE
+    if useMEE
+        stateFnc = @(xx,t0,tf) propagateState_MeeBcRom(xx,t0,tf,AC,BC,SWinputs,r,nop,svs,F_U,M_U,maxAtmAlt,et0,jd0);
+%         measurementFcn = @(xx) fullmee2mee(xx,nop,svs); % Function to convert from state with MEE,BC,ROM to only MEE
+    else
+        stateFnc = @(xx,t0,tf) propagateState_PosVelBcRom(xx,t0,tf,AC,BC,SWinputs,r,nop,svs,F_U,M_U,maxAtmAlt,et0,jd0);
+    end
+    measurementFcn = @(xx,objectNumber) extractSingleState(xx,objectNumber,svs); % Function to get state of single object without BC or ROM state
     
     % Run Unscented Kalman filter estimation
-    [X_est,Pv] = UKF(X_est,Meas,time,stateFnc,measurementFcn,P,RM,Q);
+%     [X_est,Pv] = UKF(X_est,Meas,time,stateFnc,measurementFcn,P,RM,Q);
+    time = measEpochs - et0;
+    % Always start at zero
+    if time(1) ~= 0
+        time = [0, time];
+        % Add dummy measurement at t0
+        Meas = [zeros(size(Meas,1),1), Meas];
+    end
+    [X_est,Pv] = UKFsingleMeasurements(X_est,Meas,time,stateFnc,measurementFcn,P,RMEphem,Q,useMEE);
     Pv(:,1) = diag(P); % Add initial state variance to state variance history
     
+    global resultsDirPath
+    nowTimeStr = datestr(now,'yymmddHHMMSS');
+    filenameBase = [resultsDirPath 'ukf_rom_radar_' ROMmodel '_'];
+    testCaseName = [sprintf('%04d',yr), sprintf('%02d',mth), sprintf('%02d',dy), '_', num2str(nofDays) 'd_', num2str(nop), 'obj_'];
+    
+    save([filenameBase 'workspace_' testCaseName nowTimeStr]);
     
     %% Plot results
     if plotFigures
         
+        
         % Plot estimated ROM modes and corresponding uncertainty
-        figure;
+        ROMplot = figure;
         for i = 1:r
             subplot(ceil(r/4),4,i)
             plot(time/3600,X_est(end-r+i,:),'Linewidth',1); hold on;
@@ -286,18 +347,20 @@ try
             axis tight;
             set(gca,'fontsize', 14);
         end
+        savefig(ROMplot,[filenameBase 'ROMmodes_' testCaseName nowTimeStr '.fig']);
         
         % Plot uncertainty in estimated ROM modes
-        figure;
+        ROMcovplot = figure;
         for i = 1:r
             subplot(ceil(r/4),4,i)
             plot(time/3600,3*Pv(end-r+i,:).^0.5,'k');
             xlabel('Time, hrs'); ylabel(['z_{' num2str(i) '} 3\sigma']);
             title(sprintf('Mode %.0f',i));
         end
+        savefig(ROMcovplot,[filenameBase 'ROMmodesCov_' testCaseName nowTimeStr '.fig']);
         
         % Plot estimated ballistic coefficients and corresponding uncertainty
-        figure;
+        BCplot2 = figure;
         for i = 1:nop
             subplot(ceil(nop/2),2,i)
             plot(time/3600,X_est(svs*i,:)/1000,'Linewidth',1); hold on;
@@ -308,18 +371,20 @@ try
             axis tight;
             set(gca,'fontsize', 14);
         end
+        savefig(BCplot2,[filenameBase 'BC_' testCaseName nowTimeStr '.fig']);
         
         % Plot uncertainty in estimated ballistic coefficients
-        figure;
+        BCcovplot = figure;
         for i = 1:nop
             subplot(ceil(nop/2),2,i)
             plot(time/3600,3*Pv(svs*i,:).^0.5./X_est(svs*i,:)*100,'k');
             xlabel('Time, hrs');ylabel('BC 3\sigma [%]');
             title(sprintf('Orbit %.0f, BC=%.2f',objects(i).noradID,X_est(svs*i,end)));
         end
+        savefig(BCcovplot,[filenameBase 'BCcov_' testCaseName nowTimeStr '.fig']);
         
         % Plot uncertainty in estimated equinoctial orbital elements
-        figure;
+        meeCovPlot = figure;
         for i = 1:nop
             for j=1:6
                 subplot(2,3,j); hold on;
@@ -332,26 +397,69 @@ try
         subplot(2,3,4); xlabel('Time [hours]'); ylabel('\sigma_h [-]');
         subplot(2,3,5); xlabel('Time [hours]'); ylabel('\sigma_k [-]');
         subplot(2,3,6); xlabel('Time [hours]'); ylabel('\sigma_L [rad]');
+        savefig(meeCovPlot,[filenameBase 'MEEcov_' testCaseName nowTimeStr '.fig']);
         
-        % Plot position errors w.r.t. TLE measurements
-        figure;
+        % Plot uncertainty in measurements: equinoctial orbital elements
+        meeMeasCovPlot = figure;
+        for i = 1:nop
+            objIndices = find(Meas(1,:)==i)-1;
+            for j=1:6
+                subplot(2,3,j); hold on;
+                plot(time(objIndices)/3600,reshape(RMEphem(j,j,objIndices),length(objIndices),1).^0.5);
+            end
+        end
+        subplot(2,3,1); xlabel('Time [hours]'); ylabel('\sigma_p [km]'); legend(objectIDlabels);
+        subplot(2,3,2); xlabel('Time [hours]'); ylabel('\sigma_f [-]');
+        subplot(2,3,3); xlabel('Time [hours]'); ylabel('\sigma_g [-]');
+        subplot(2,3,4); xlabel('Time [hours]'); ylabel('\sigma_h [-]');
+        subplot(2,3,5); xlabel('Time [hours]'); ylabel('\sigma_k [-]');
+        subplot(2,3,6); xlabel('Time [hours]'); ylabel('\sigma_L [rad]');
+        savefig(meeMeasCovPlot,[filenameBase 'measCov_' testCaseName nowTimeStr '.fig']);
+        
+        % Plot position errors w.r.t. measurements
+        posPlot = figure;
         for k = 1:nop
-            xx_pv_est = zeros(6,size(X_est,2));
-            xx_pv_meas = zeros(6,size(meeMeas,2));
-            for j=1:size(X_est,2)
-                [pos,vel] = ep2pv(X_est((k-1)*svs+1:(k-1)*svs+6,j),GM_kms);
+            objIndices = find(Meas(1,:)==k);
+            
+            xx_pv_est = zeros(6,length(objIndices));
+            xx_pv_meas = zeros(6,length(objIndices));
+            for j=1:length(objIndices)
+                objI = objIndices(j);
+                [pos,vel] = ep2pv(X_est((k-1)*svs+1:(k-1)*svs+6,objI),GM_kms);
                 xx_pv_est(1:3,j) = pos;
                 xx_pv_est(4:6,j) = vel;
-                [pos,vel] = ep2pv(meeMeas((k-1)*6+1:(k-1)*6+6,j),GM_kms);
+                [pos,vel] = ep2pv(Meas(2:end,objI),GM_kms);
                 xx_pv_meas(1:3,j) = pos;
                 xx_pv_meas(4:6,j) = vel;
             end
             posErrors = sqrt(sum( (xx_pv_est(1:3,:)-xx_pv_meas(1:3,:)) .^2,1));
             subplot(ceil(nop/2),2,k)
-            plot(time/3600,posErrors); hold on;
+            plot(time(objIndices)/3600,posErrors); hold on;
             xlabel('Time, hrs');ylabel('Position error [km]');
             title(sprintf('Orbit %.0f, mean= %.2f',objects(k).noradID,mean(posErrors)));
         end
+        savefig(posPlot,[filenameBase 'posErr_' testCaseName nowTimeStr '.fig']);
+        
+        % Plot MEE errors w.r.t. measurements
+        meePlot = figure;
+        for k = 1:nop
+            objIndices = find(Meas(1,:)==k);
+                xx_mee_est = X_est((k-1)*svs+1:(k-1)*svs+6,objIndices);
+                xx_mee_meas = Meas(2:end,objIndices);
+            for j=1:5
+                subplot(2,3,j)
+                plot(time(objIndices)/3600,xx_mee_est(j,:)-xx_mee_meas(j,:)); hold on;
+            end
+            subplot(2,3,6)
+            plot(time(objIndices)/3600,wrapToPi(xx_mee_est(6,:)-xx_mee_meas(6,:))); hold on;
+        end
+        subplot(2,3,1); xlabel('Time [hours]'); ylabel('p error [km]'); legend(objectIDlabels);
+        subplot(2,3,2); xlabel('Time [hours]'); ylabel('f error [-]');
+        subplot(2,3,3); xlabel('Time [hours]'); ylabel('g error [-]');
+        subplot(2,3,4); xlabel('Time [hours]'); ylabel('h error [-]');
+        subplot(2,3,5); xlabel('Time [hours]'); ylabel('k error [-]');
+        subplot(2,3,6); xlabel('Time [hours]'); ylabel('L error [rad]');
+        savefig(meePlot,[filenameBase 'MEEerr_' testCaseName nowTimeStr '.fig']);
         
         % Plot estimated density and uncertainty on local solar time v latitude grid
         slt_plot = 0:0.5:24;
@@ -363,7 +471,7 @@ try
         nofHeights = length(heights);
         
         % Plot estimated density
-        figure;
+        densPlot = figure;
         for i = 1:nofHeights
             height = heights(i);
             ALT = height*ones(size(SLT,1),size(SLT,2));
@@ -386,9 +494,10 @@ try
             if i == nofHeights; xlabel('Local solar time'); xticks([0 6 12 18 24]); end
             set(gca,'FontSize',14);
         end
+        savefig(densPlot,[filenameBase 'densAlt_' testCaseName nowTimeStr '.fig']);
         
         % Plot uncertainty in estimated density
-        figure;
+        densCovPlot = figure;
         set(gcf,'Color','w');
         for i = 1:nofHeights
             height = heights(i);
@@ -414,6 +523,7 @@ try
             if i == nofHeights; xlabel('Local solar time'); xticks([0 6 12 18 24]); end
             set(gca,'FontSize',14);
         end
+        savefig(densCovPlot,[filenameBase 'densCovAlt_' testCaseName nowTimeStr '.fig']);
         
     end
     
