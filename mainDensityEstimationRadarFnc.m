@@ -128,7 +128,7 @@ loadSGP4();
 %% PERFORM DENSITY ESTIMATION
 plotFigures = true;
 
-runDensityEstimationRadar(yr,mth,dy,hr,mn,sec,nofDays,ROMmodel,r,selectedObjects,plotFigures);
+runDensityEstimationRadar(yr,mth,dy,hr,mn,sec,nofDays,ROMmodel,r,selectedObjects,plotFigures,highFidelity);
 
 
 %% Clear memory

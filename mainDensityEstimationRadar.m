@@ -51,6 +51,8 @@ mn      = 0;
 sec     = 0;
 nofDays = 25;   % Number of days
 
+% Use high fidelity dynamical model
+highFidelity = true;
 
 % Reduced-order model
 ROMmodel = 'JB2008_1999_2010';  % Name of reduced-order density model: JB2008_1999_2010, NRLMSISE_1997_2008 or TIEGCM_1997_2008
@@ -61,11 +63,16 @@ r  = 10;                        % Reduced order
 % selectedObjects = [63;165;614;2153;2622;4221;6073;7337;8744;12138;12388;14483;20774;23278;27391;27392;26405]; % TLE
 selectedObjects = [614;2153;2622;4221;12138]; % Radar
 
+% Display date
+datetime(yr,mth,dy)
 
 %% SET PATHS
 % *** SPECIFY YOUR SPICE TOOLBOX DIRECTORY HERE! ***
 % spicePath = fullfile('[SPICE TOOLKIT DIRECTORY]','mice'); 
 spicePath = fullfile('/Users/davidgondelach/Documents','mice'); 
+global resultsDirPath ephemerisPath
+resultsDirPath = ['/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/RadarObs/',ROMmodel,'/'];
+ephemerisPath = '/Users/davidgondelach/Documents/RadarData/LeoLabsEphemeris';
 
 addpath( 'AstroFunctions' );
 addpath( 'Estimation' );
@@ -85,8 +92,11 @@ kernelpath  = fullfile('Data','kernel.txt');
 loadSPICE(kernelpath);
 
 % Load gravity model
-gravmodeldegree  = 48;  % Use degree and order 48 for the spherical harmonics
-gravmodeldegree  = 20;  % Use degree and order 48 for the spherical harmonics
+if highFidelity
+    gravmodeldegree  = 48;  % Use degree and order 48 for the spherical harmonics
+else
+    gravmodeldegree  = 20;  % Use degree and order 20 for the spherical harmonics
+end
 loadGravityModel( gravmodeldegree );
 
 % Load Earth orientation parameters (needed for TEME to ECI transformation)
@@ -101,7 +111,7 @@ loadSGP4();
 %% PERFORM DENSITY ESTIMATION
 plotFigures = true;
 
-runDensityEstimationRadar(yr,mth,dy,hr,mn,sec,nofDays,ROMmodel,r,selectedObjects,plotFigures);
+runDensityEstimationRadar(yr,mth,dy,hr,mn,sec,nofDays,ROMmodel,r,selectedObjects,plotFigures,highFidelity);
 
 
 %% Clear memory

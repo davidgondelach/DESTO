@@ -59,6 +59,12 @@ else
     plotFigures = false;
 end
 
+if nargin > 11
+    highFidelity = varargin{2};
+else
+    highFidelity = false;
+end
+
 try
     
     global mu  % Earth gravitational parameter according to SGP4 model [km^3 s^-2]
@@ -105,11 +111,6 @@ try
         [objects] = getTLEsForEstimation(yr, mth, 1, yrf, mthf, dyf, selectedObjects, getTLEsFromSingleFile);
     end
     
-    
-    %% Get Radar ephemeris data
-    global ephemerisPath
-    [ephemerisObjects] = getEphemeris(ephemerisPath,selectedObjects);
-
     
     %% Load BC estimates
     % Ballistic coefficient data: NORAD ID and BC
@@ -166,6 +167,10 @@ try
     end
     
     
+    %% Get Radar ephemeris data
+    global ephemerisPath
+    [ephemerisObjects] = getEphemeris(ephemerisPath,selectedObjects);
+
     %% Get observations from ephemeris data
     useMEE = true;
     if useMEE
@@ -175,6 +180,7 @@ try
         % Position and velocity measurements
         [measEphem,RMEphem] = generateObservationsFromEphemeris(ephemerisObjects,et0,etf);
     end
+    
     
     %% Load reduced-order density models
     [AC,BC,Uh,F_U,Dens_Mean,M_U,SLTm,LATm,ALTm,maxAtmAlt,SWinputs,Qrom] = generateROMdensityModel(ROMmodel,r,jd0,jdf);
@@ -305,8 +311,7 @@ try
     
     % Set state propagation and measurement functions
     if useMEE
-        stateFnc = @(xx,t0,tf) propagateState_MeeBcRom(xx,t0,tf,AC,BC,SWinputs,r,nop,svs,F_U,M_U,maxAtmAlt,et0,jd0);
-%         measurementFcn = @(xx) fullmee2mee(xx,nop,svs); % Function to convert from state with MEE,BC,ROM to only MEE
+        stateFnc = @(xx,t0,tf) propagateState_MeeBcRom(xx,t0,tf,AC,BC,SWinputs,r,nop,svs,F_U,M_U,maxAtmAlt,et0,jd0,highFidelity);
     else
         stateFnc = @(xx,t0,tf) propagateState_PosVelBcRom(xx,t0,tf,AC,BC,SWinputs,r,nop,svs,F_U,M_U,maxAtmAlt,et0,jd0);
     end

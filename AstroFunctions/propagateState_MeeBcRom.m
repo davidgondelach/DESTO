@@ -1,4 +1,4 @@
-function [xf_mee] = propagateState_MeeBcRom(x0_mee,t0,tf,AC,BC,SWinputs,r,nop,svs,F_U,M_U,maxAtmAlt,et0,jdate0)
+function [xf_mee] = propagateState_MeeBcRom(x0_mee,t0,tf,AC,BC,SWinputs,r,nop,svs,F_U,M_U,maxAtmAlt,et0,jdate0,highFidelity)
 %PROPAGATESTATE_MEEBCROM - Propagate objects and ROM density
 % Convert state in modified equinoctial elements to Cartesian coordinates
 % propagate states and reduced-order density and convert Cartesian states
@@ -26,7 +26,7 @@ for k = 1:nop
 end
 
 opts = odeset('RelTol',1e-10,'AbsTol',1e-10,'Events', @(t,x) isdecayed(t,x,nop*size(x0_mee,2),svs));
-[~,xf_out]=ode113(@(t,x) computeDerivative_PosVelBcRom(t,x,AC,BC,SWinputs,r,nop,svs,F_U,M_U,maxAtmAlt,et0,jdate0),[t0 tf],xx_pv,opts);
+[~,xf_out]=ode113(@(t,x) computeDerivative_PosVelBcRom(t,x,AC,BC,SWinputs,r,nop,svs,F_U,M_U,maxAtmAlt,et0,jdate0,highFidelity),[t0 tf],xx_pv,opts);
 xf_pv = reshape(xf_out(end,:)',nop*svs+r,[]);
 
 xf_mee = xf_pv;

@@ -1,4 +1,4 @@
-function [ f ] = computeDerivative_PosVelBcRom(t,xp,AC,BC,SWinputs,r,noo,svs,F_U,M_U,maxAtmAlt,et0,jdate0)
+function [ f ] = computeDerivative_PosVelBcRom(t,xp,AC,BC,SWinputs,r,noo,svs,F_U,M_U,maxAtmAlt,et0,jdate0,highFidelity)
 % COMPUTEDERIVATIVE_POSVELBCROM - Compute derivatives of objects
 % position, velocity and BC, and reduced-order state
 %
@@ -91,6 +91,52 @@ for i = 1:noo
     % Time derivative of ballistic coefficients is zero
     f(svs*(i-1)+7,:) = 0;
   
+end
+
+if highFidelity
+    
+    %%% Compute Sun Moon %%%
+    % Sun position in J2000 ref frame
+    rr_Sun = cspice_spkezr('Sun',et,'J2000','NONE', 'Earth');
+    rr_Sun = rr_Sun(1:3,1);
+    gravconst = 6.67259e-20; % [km^3/kg/s^2]
+    GM_Sun    = gravconst*1.9891e30; % [kg]
+    % Moon position in J2000 ref frame
+    rr_Moon = cspice_spkezr('Moon',et,'J2000','NONE', 'Earth');
+    rr_Moon = rr_Moon(1:3,1);
+    GM_Moon = gravconst*7.3477e22; % [kg]
+    
+    % Solar radiation
+    AU          = 1.49597870691e8; % [km]
+    L_sun       = 3.846e20; % [MW] Luminosity of the Sun -> 3.846e26 W -> W = kg m/s2 m/s -(to km)-> 1e-6 kg km/s2 km/s -> 1e-6 MW/W
+    c_light     = 299792.458; % [km/s] speed of light
+    P_sun       = L_sun/(4*pi*AU^2*c_light);
+    C_R = 1.2;
+
+    %%% SRP and lunisolar perturbations %%%
+    for i = 1:noo
+        aa_eci = zeros(3,n);
+        for j=1:n
+            rr_sat = x(svs*(i-1)+1:svs*(i-1)+3,j);
+            
+            % Solar radiation pressure
+            b_star = x(svs*i,j);
+            AoMSRP = b_star/2.2 * 1e-9; % Approximate area-to-mass ratio (assuming BC=Cd*AoM and Cd=2.2)
+            % SRP acceleration
+            aa_SRP = AccelSolrad(rr_sat, [0;0;0],[0;0;0], rr_Sun, [0;0;0] ,AoMSRP,C_R,P_sun,AU,'cylindrical');
+            aa_eci(:,j) = aa_SRP;
+            
+            % Moon gravitational acceleration
+            aa_Moon = AccelPointMass(rr_sat,rr_Moon,GM_Moon);
+            aa_eci(:,j) = aa_eci(:,j) + aa_Moon;
+            
+            % Sun gravitational acceleration
+            aa_Sun = AccelPointMass(rr_sat,rr_Sun,GM_Sun);
+            aa_eci(:,j) = aa_eci(:,j) + aa_Sun;
+        end
+        % Add SRP and lunisolar accelerations
+        f(svs*(i-1)+4:svs*(i-1)+6,:) = f(svs*(i-1)+4:svs*(i-1)+6,:) + aa_eci;
+    end
 end
 
 % Time derivative of reduced-order density state: dz/dt = Ac*z + Bc*u
