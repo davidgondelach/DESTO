@@ -1,4 +1,4 @@
-function [X_est,Pv] = UKFsingleMeasurements(X_est,Meas,time,stateFnc,measurementFcn,P,RM,Q,useMEE)
+function [X_est,Pv] = UKFsingleMeasurements(X_est,Meas,time,statePredictionFnc,state2measurementFcn,residualFcn,P,RM,Q,useMEE)
 %UKF Square-root Unscented Kalman filter
 %   X_est: initial state guess
 %   Meas: measurements
@@ -31,27 +31,21 @@ SR_Wc = sqrt(Wc); SR_Wm = sqrt(Wm);
 S=chol(P)';
 eta = sqrt(L+lam);
 
-% Measurements
-objectNumbers = Meas(1,:); % Measurement belongs to this object
-Meas = Meas(2:end,:); % Actual measurements
+% Add initial state variance to state variance history
+Pv(:,1) = diag(P);
 
-% tStart = tic;
-% tic
 try
     
     m = size(Meas,2);
     for i = 1:m-1
         
         fprintf('%.0f of %.0f \n',i,m-1);
-%         toc
-%         toc(tStart)
-%         tic
         
         sigv = real([eta*S -eta*S]);
         xx = [X_est(:,i) sigv+kron(X_est(:,i),ones(1,2*L))];
         
         % Time Update
-        [Xp] = stateFnc(xx,time(i),time(i+1));
+        [Xp] = statePredictionFnc(xx,time(i),time(i+1));
         
         X_est(:,i+1) = Wm(1) * Xp(:,1) + Wm(2) * sum(Xp(:,2:end),2);
         
@@ -66,7 +60,7 @@ try
         S_minus = cholupdate(S_minus,Wc(1)*(Xp(:,1)-X_est(:,i+1)))';
         
         % Measurement function
-        [Ym] = measurementFcn(Xp,objectNumbers(i+1)); % [nofMeas x nofSigma]
+        [Ym] = state2measurementFcn(Xp,Meas(:,i+1)); % [nofMeas x nofSigma]
         ym = Wm(1) * Ym(:,1) + Wm(2) * sum(Ym(:,2:end),2); % [nofMeas x 1]
         
         DY = Ym(:,1)-ym; % [nofMeas x 1]
@@ -88,10 +82,7 @@ try
         Pxy = Pxy0+Wc(2)*(Pmat*Pyymat'); % [nofStates x nofMeas]
         
         % Measurement residual
-        yres = Meas(:,i+1)-ym; % [nofMeas x 1]
-        if useMEE
-            yres(6:6:end) = wrapToPi(yres(6:6:end)); % Wrap difference in true longitude to [-pi,pi]
-        end
+        yres = residualFcn(ym,Meas(:,i+1)); % [nofMeas x 1]
         
         % Gain and Update
         KG = real(Pxy/S_y')/S_y; % [nofStates x nofMeas]

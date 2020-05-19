@@ -70,9 +70,10 @@ datetime(yr,mth,dy)
 % *** SPECIFY YOUR SPICE TOOLBOX DIRECTORY HERE! ***
 % spicePath = fullfile('[SPICE TOOLKIT DIRECTORY]','mice'); 
 spicePath = fullfile('/Users/davidgondelach/Documents','mice'); 
-global resultsDirPath ephemerisPath
+global resultsDirPath ephemerisPath measurementsPath
 resultsDirPath = ['/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/RadarObs/',ROMmodel,'/'];
 ephemerisPath = '/Users/davidgondelach/Documents/RadarData/LeoLabsEphemeris';
+measurementsPath = '/Users/davidgondelach/Documents/RadarData/LeoLabsData/';
 
 addpath( 'AstroFunctions' );
 addpath( 'Estimation' );

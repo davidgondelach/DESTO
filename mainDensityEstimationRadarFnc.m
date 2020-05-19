@@ -80,15 +80,17 @@ datetime(yr,mth,dy)
 % spicePath = fullfile('[SPICE TOOLKIT DIRECTORY]','mice'); 
 % spicePath = fullfile('/Users/davidgondelach/Documents','mice'); 
 
-global resultsDirPath ephemerisPath
+global resultsDirPath ephemerisPath measurementsPath
 if SUPERCLOUD
     spicePath = fullfile('..','..','SPICE','mice');
     resultsDirPath = 'Results/';
     ephemerisPath = 'Ephemeris';
+    measurementsPath = 'Ephemeris';
 else
     spicePath = fullfile('/Users','davidgondelach','Documents','mice');
     resultsDirPath = ['/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/RadarObs/',ROMmodel,'/'];
     ephemerisPath = '/Users/davidgondelach/Documents/RadarData/LeoLabsEphemeris';
+    measurementsPath = '/Users/davidgondelach/Documents/RadarData/LeoLabsData/';
 end
 
 addpath( 'AstroFunctions' );

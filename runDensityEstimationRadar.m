@@ -145,7 +145,7 @@ try
     %% Generate observations from TLE data
 %     obsEpochs = jd0:dt/86400:jdf;
     obsEpochs = jd0;
-    [meeMeas] = generateObservationsMEE(objects,obsEpochs,GM_kms);
+    [meeMeasTLE] = generateObservationsMEE(objects,obsEpochs,GM_kms);
     
     if plotFigures
         % Plot orbital elements and bstar of TLEs
@@ -166,21 +166,34 @@ try
         subplot(2,3,6); xlabel('Days since t_0'); ylabel('Bstar');legend(objectIDlabels,'Location','northeast');
     end
     
-    
-    %% Get Radar ephemeris data
-    global ephemerisPath
-    [ephemerisObjects] = getEphemeris(ephemerisPath,selectedObjects);
-
-    %% Get observations from ephemeris data
+    useRangeRangeRate = true;
     useMEE = true;
-    if useMEE
-        % Modified equinoctial element measurements
-        [measEphem,RMEphem] = generateObservationsMEEFromEphemeris(ephemerisObjects,et0,etf,GM_kms);
+    if useRangeRangeRate
+        %% Get Radar measurement data
+        global measurementsPath
+        [radarMeasurementsObjects] = getRadarMeasurements(measurementsPath,selectedObjects);
+        [radarStations] = getRadarStations(measurementsPath);
+        [measRangeRangeRate,Rmeas] = generateRangeRangeRateObsFromRadarMeas(radarMeasurementsObjects,radarStations,et0,etf);
+        
+        measEpochs = measRangeRangeRate(1,:); % Time of measurement
+        Meas = measRangeRangeRate(2:end,:); % Measurements
     else
-        % Position and velocity measurements
-        [measEphem,RMEphem] = generateObservationsFromEphemeris(ephemerisObjects,et0,etf);
+        %% Get Radar ephemeris data
+        global ephemerisPath
+        [ephemerisObjects] = getEphemeris(ephemerisPath,selectedObjects);
+        
+        %% Get observations from ephemeris data
+        if useMEE
+            % Modified equinoctial element measurements
+            [measEphem,Rmeas] = generateObservationsMEEFromEphemeris(ephemerisObjects,et0,etf,GM_kms);
+        else
+            % Position and velocity measurements
+            [measEphem,Rmeas] = generateObservationsFromEphemeris(ephemerisObjects,et0,etf);
+        end
+        
+        measEpochs = measEphem(1,:); % Time of measurement
+        Meas = measEphem(2:end,:); % Measurements
     end
-    
     
     %% Load reduced-order density models
     [AC,BC,Uh,F_U,Dens_Mean,M_U,SLTm,LATm,ALTm,maxAtmAlt,SWinputs,Qrom] = generateROMdensityModel(ROMmodel,r,jd0,jdf);
@@ -198,10 +211,10 @@ try
     for i = 1:nop
         if useMEE
             % Orbital state guesses in modified equinoctial elements
-            x0g(svs*(i-1)+1:svs*(i-1)+6,1) = meeMeas(6*(i-1)+1:6*(i-1)+6,1);
+            x0g(svs*(i-1)+1:svs*(i-1)+6,1) = meeMeasTLE(6*(i-1)+1:6*(i-1)+6,1);
         else
             % Orbital state guesses in position and velocity
-            [x0g(svs*(i-1)+1:svs*(i-1)+3,1),x0g(svs*(i-1)+4:svs*(i-1)+6,1)] = ep2pv( meeMeas(6*(i-1)+1:6*(i-1)+6,1), GM_kms);
+            [x0g(svs*(i-1)+1:svs*(i-1)+3,1),x0g(svs*(i-1)+4:svs*(i-1)+6,1)] = ep2pv( meeMeasTLE(6*(i-1)+1:6*(i-1)+6,1), GM_kms);
         end
         % Ballistic coefficient guesses
         x0g(svs*i) = BCestimates(i) * 1000;
@@ -235,16 +248,14 @@ try
     %% Measurements and covariance
     % TLE-derived orbit observations in modified equinoctial elements
 %     Meas = meeMeas;
-    measEpochs = measEphem(1,:); % Time of measurement
-    Meas = measEphem(2:end,:); % Measurements
     
     % Measurement noise
-    RM = [];
+    R_TLE = [];
     for i = 1:nop
         RMfactor = max(objects(i).satrecs(1).ecco/0.004,1);
-        RM = [RM; [max(4*objects(i).satrecs(1).ecco,0.0023); RMfactor*3.0e-10; RMfactor*3.0e-10; 1.e-9; 1.e-9; 1e-8]];
+        R_TLE = [R_TLE; [max(4*objects(i).satrecs(1).ecco,0.0023); RMfactor*3.0e-10; RMfactor*3.0e-10; 1.e-9; 1.e-9; 1e-8]];
     end
-    RM = diag(RM); % Convert to matrix with variances on the diagonal
+    R_TLE = diag(R_TLE); % Convert to matrix with variances on the diagonal
     
     %% Process noise Q and initial state covariance P
     
@@ -253,12 +264,12 @@ try
     for i = 1:nop
         if useMEE
             % Initial variance for orbital state in MEE (equal to measurement noise)
-            Pv(svs*(i-1)+1) = RM(6*(i-1)+1,6*(i-1)+1);
-            Pv(svs*(i-1)+2) = RM(6*(i-1)+2,6*(i-1)+2);
-            Pv(svs*(i-1)+3) = RM(6*(i-1)+3,6*(i-1)+3);
-            Pv(svs*(i-1)+4) = RM(6*(i-1)+4,6*(i-1)+4);
-            Pv(svs*(i-1)+5) = RM(6*(i-1)+5,6*(i-1)+5);
-            Pv(svs*(i-1)+6) = RM(6*(i-1)+6,6*(i-1)+6);
+            Pv(svs*(i-1)+1) = R_TLE(6*(i-1)+1,6*(i-1)+1);
+            Pv(svs*(i-1)+2) = R_TLE(6*(i-1)+2,6*(i-1)+2);
+            Pv(svs*(i-1)+3) = R_TLE(6*(i-1)+3,6*(i-1)+3);
+            Pv(svs*(i-1)+4) = R_TLE(6*(i-1)+4,6*(i-1)+4);
+            Pv(svs*(i-1)+5) = R_TLE(6*(i-1)+5,6*(i-1)+5);
+            Pv(svs*(i-1)+6) = R_TLE(6*(i-1)+6,6*(i-1)+6);
             
             % Process noise for orbital state in MEE
             Qv(svs*(i-1)+1) = 1.5e-8;
@@ -272,7 +283,7 @@ try
             ii = 6*(i-1)+1;
             jj = 6*(i-1)+6;
             % Convert assumed MEE covariance to 
-            [~,posVelCov] = meeCov2cartCov(meeMeas(ii:jj,1), RM(ii:jj,ii:jj), GM_kms);
+            [~,posVelCov] = meeCov2cartCov(meeMeasTLE(ii:jj,1), R_TLE(ii:jj,ii:jj), GM_kms);
             Pv(svs*(i-1)+1:svs*(i-1)+6) = diag(posVelCov);
             
             % Process noise for position and velocity (~ MEE covariance
@@ -315,7 +326,14 @@ try
     else
         stateFnc = @(xx,t0,tf) propagateState_PosVelBcRom(xx,t0,tf,AC,BC,SWinputs,r,nop,svs,F_U,M_U,maxAtmAlt,et0,jd0);
     end
-    measurementFcn = @(xx,objectNumber) extractSingleState(xx,objectNumber,svs); % Function to get state of single object without BC or ROM state
+    
+    if useRangeRangeRate
+        state2measurementFcn = @(xx,meas) extractSingleRangeRangeRate(xx,meas,svs,GM_kms); % Function to get range and range rate of single object
+        residualFcn = @(ym,meas) getResidualRangeRangeRate(ym,meas);
+    else
+        state2measurementFcn = @(xx,meas) extractSingleState(xx,meas,svs); % Function to get state of single object without BC or ROM state
+        residualFcn = @(ym,meas) getResidualMEE(ym,meas);
+    end
     
     % Run Unscented Kalman filter estimation
 %     [X_est,Pv] = UKF(X_est,Meas,time,stateFnc,measurementFcn,P,RM,Q);
@@ -326,8 +344,7 @@ try
         % Add dummy measurement at t0
         Meas = [zeros(size(Meas,1),1), Meas];
     end
-    [X_est,Pv] = UKFsingleMeasurements(X_est,Meas,time,stateFnc,measurementFcn,P,RMEphem,Q,useMEE);
-    Pv(:,1) = diag(P); % Add initial state variance to state variance history
+    [X_est,Pv] = UKFsingleMeasurements(X_est,Meas,time,stateFnc,state2measurementFcn,residualFcn,P,Rmeas,Q,useMEE);
     
     global resultsDirPath
     nowTimeStr = datestr(now,'yymmddHHMMSS');
@@ -410,7 +427,7 @@ try
             objIndices = find(Meas(1,:)==i)-1;
             for j=1:6
                 subplot(2,3,j); hold on;
-                plot(time(objIndices)/3600,reshape(RMEphem(j,j,objIndices),length(objIndices),1).^0.5);
+                plot(time(objIndices)/3600,reshape(Rmeas(j,j,objIndices),length(objIndices),1).^0.5);
             end
         end
         subplot(2,3,1); xlabel('Time [hours]'); ylabel('\sigma_p [km]'); legend(objectIDlabels);

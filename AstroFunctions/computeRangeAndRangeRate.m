@@ -9,9 +9,9 @@ function [rangeAndRangeRate] = computeRangeAndRangeRate(rSatECI,vSatECI,rSiteECI
 rhoECI  = rSatECI - rSiteECI;
 drhoECI = vSatECI - vSiteECI;
 % Compute range from site to satellite
-rho     = norm(rhoECI);
+rho     = sqrt( sum( rhoECI.^2, 1 ));
 % Compute range rate from site to satellite
-drho= dot(rhoECI,drhoECI)/rho;
+drho= dot(rhoECI,drhoECI)./rho;
 
 rangeAndRangeRate = [rho;drho];
 

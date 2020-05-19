@@ -39,9 +39,9 @@ for i=1:length(radarMeasurementsObjects)
         
         % Measurement noise
         % Range error in km
-        RM(1,nofMeas+j) = [radarMeasurementsObjects(i).measurements(j).corrected.rangeError] / 1e3;
+        RM(1,1,nofMeas+j) = [radarMeasurementsObjects(i).measurements(j).corrected.rangeError] / 1e3;
         % Range rate error in km/s
-        RM(2,nofMeas+j) = [radarMeasurementsObjects(i).measurements(j).corrected.dopplerError] / 1e3;
+        RM(2,2,nofMeas+j) = [radarMeasurementsObjects(i).measurements(j).corrected.dopplerError] / 1e3;
     end
 
 end
@@ -49,12 +49,12 @@ end
 % Remove measurements outside time window of interest
 withinWindow = find(meas(1,:)>=et0 & meas(1,:)<=etf);
 meas = meas(:,withinWindow);
-RM = RM(:,withinWindow);
+RM = RM(:,:,withinWindow);
 
 % Sort measurements on epoch
 [~, order] = sort(meas(1,:));
 meas = meas(:,order);
-RM = RM(:,order);
+RM = RM(:,:,order);
 
 % Measurement standard deviation to covaraince
 RM = RM.^2;
