@@ -5,5 +5,7 @@
 /Data/*.tls
 /Data/*.tf
 /TLEdata/*.mat
+/*.mat
+*.tle
 *.m~
 *.DS_Store
