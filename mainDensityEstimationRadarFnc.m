@@ -73,6 +73,7 @@ datetime(yr,mth,dy)
 % Default: 17 objects: [63;165;614;2153;2622;4221;6073;7337;8744;12138;12388;14483;20774;23278;27391;27392;26405]
 % selectedObjects = [63;165;614;2153;2622;4221;6073;7337;8744;12138;12388;14483;20774;23278;27391;27392;26405]; % TLE
 % selectedObjects = [614;2153;2622;4221;12138]; % Radar
+selectedObjects = sortrows(selectedObjects);
 
 
 %% SET PATHS
