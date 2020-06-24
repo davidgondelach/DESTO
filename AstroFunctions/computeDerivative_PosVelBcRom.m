@@ -64,7 +64,19 @@ vv_ecef = x_ecef(4:6,:); % Velocity in ECEF
 mag_v_ecef = sqrt( sum( vv_ecef.^2, 1 )); % Magnitude of velocity in ECEF
 
 % Gravitational accelerations in ECEF [m/s^2]
-[aa_grav_ecef_x, aa_grav_ecef_y, aa_grav_ecef_z] = computeEarthGravitationalAcceleration(rr_ecef'*1000);
+nofStates = size(rr_ecef,2);
+partSize = 600;
+nofParts = floor( size(rr_ecef,2) / partSize );
+aa_grav_ecef_x = zeros(nofStates,1);
+aa_grav_ecef_y = zeros(nofStates,1);
+aa_grav_ecef_z = zeros(nofStates,1);
+for i = 1:nofParts
+    [aa_grav_ecef_x((i-1)*partSize+1:i*partSize,1), aa_grav_ecef_y((i-1)*partSize+1:i*partSize,1), aa_grav_ecef_z((i-1)*partSize+1:i*partSize,1)] = ...
+        computeEarthGravitationalAcceleration(rr_ecef(:,(i-1)*partSize+1:i*partSize)'*1000);
+end
+[aa_grav_ecef_x(nofParts*partSize+1:end,1), aa_grav_ecef_y(nofParts*partSize+1:end,1), aa_grav_ecef_z(nofParts*partSize+1:end,1)] = ...
+        computeEarthGravitationalAcceleration(rr_ecef(:,nofParts*partSize+1:end)'*1000);
+% [aa_grav_ecef_x, aa_grav_ecef_y, aa_grav_ecef_z] = computeEarthGravitationalAcceleration(rr_ecef'*1000);
 % Gravitational accelerations in ECI [km/s^2]
 aa_grav_eci = xform(1:3,1:3)' * [aa_grav_ecef_x'; aa_grav_ecef_y'; aa_grav_ecef_z'] / 1000;
 
