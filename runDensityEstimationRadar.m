@@ -421,67 +421,121 @@ try
         subplot(2,3,6); xlabel('Time [hours]'); ylabel('\sigma_L [rad]');
         savefig(meeCovPlot,[filenameBase 'MEEcov_' testCaseName nowTimeStr '.fig']);
         
-        % Plot uncertainty in measurements: equinoctial orbital elements
-        meeMeasCovPlot = figure;
-        for i = 1:nop
-            objIndices = find(Meas(1,:)==i)-1;
-            for j=1:6
-                subplot(2,3,j); hold on;
-                plot(time(objIndices)/3600,reshape(Rmeas(j,j,objIndices),length(objIndices),1).^0.5);
-            end
-        end
-        subplot(2,3,1); xlabel('Time [hours]'); ylabel('\sigma_p [km]'); legend(objectIDlabels);
-        subplot(2,3,2); xlabel('Time [hours]'); ylabel('\sigma_f [-]');
-        subplot(2,3,3); xlabel('Time [hours]'); ylabel('\sigma_g [-]');
-        subplot(2,3,4); xlabel('Time [hours]'); ylabel('\sigma_h [-]');
-        subplot(2,3,5); xlabel('Time [hours]'); ylabel('\sigma_k [-]');
-        subplot(2,3,6); xlabel('Time [hours]'); ylabel('\sigma_L [rad]');
-        savefig(meeMeasCovPlot,[filenameBase 'measCov_' testCaseName nowTimeStr '.fig']);
+%         % Plot uncertainty in measurements: equinoctial orbital elements
+%         measCovPlot = figure;
+%         if useRangeRangeRate
+%             for i = 1:nop
+%                 objIndices = find(Meas(1,:)==i)-1;
+%                 for j=1:2
+%                     subplot(1,2,j); hold on;
+%                     plot(time(objIndices)/3600,reshape(Rmeas(j,j,objIndices),length(objIndices),1).^0.5);
+%                 end
+%             end
+%             subplot(1,2,1); xlabel('Time [hours]'); ylabel('\sigma_{range} [km]'); legend(objectIDlabels);
+%             subplot(1,2,2); xlabel('Time [hours]'); ylabel('\sigma_{rangerate} [km/s]');
+%         else
+%             for i = 1:nop
+%                 objIndices = find(Meas(1,:)==i)-1;
+%                 for j=1:6
+%                     subplot(2,3,j); hold on;
+%                     plot(time(objIndices)/3600,reshape(Rmeas(j,j,objIndices),length(objIndices),1).^0.5);
+%                 end
+%             end
+%             subplot(2,3,1); xlabel('Time [hours]'); ylabel('\sigma_p [km]'); legend(objectIDlabels);
+%             subplot(2,3,2); xlabel('Time [hours]'); ylabel('\sigma_f [-]');
+%             subplot(2,3,3); xlabel('Time [hours]'); ylabel('\sigma_g [-]');
+%             subplot(2,3,4); xlabel('Time [hours]'); ylabel('\sigma_h [-]');
+%             subplot(2,3,5); xlabel('Time [hours]'); ylabel('\sigma_k [-]');
+%             subplot(2,3,6); xlabel('Time [hours]'); ylabel('\sigma_L [rad]');
+%         end
+%         savefig(measCovPlot,[filenameBase 'measCov_' testCaseName nowTimeStr '.fig']);
         
-        % Plot position errors w.r.t. measurements
-        posPlot = figure;
-        for k = 1:nop
-            objIndices = find(Meas(1,:)==k);
-            
-            xx_pv_est = zeros(6,length(objIndices));
-            xx_pv_meas = zeros(6,length(objIndices));
-            for j=1:length(objIndices)
-                objI = objIndices(j);
-                [pos,vel] = ep2pv(X_est((k-1)*svs+1:(k-1)*svs+6,objI),GM_kms);
-                xx_pv_est(1:3,j) = pos;
-                xx_pv_est(4:6,j) = vel;
-                [pos,vel] = ep2pv(Meas(2:end,objI),GM_kms);
-                xx_pv_meas(1:3,j) = pos;
-                xx_pv_meas(4:6,j) = vel;
+        if useRangeRangeRate
+            % Plot position errors w.r.t. measurements
+            rangeResidualPlot = figure;
+            for k = 1:nop
+                ax1(k) = subplot(ceil(nop/2),2,k);
             end
-            posErrors = sqrt(sum( (xx_pv_est(1:3,:)-xx_pv_meas(1:3,:)) .^2,1));
-            subplot(ceil(nop/2),2,k)
-            plot(time(objIndices)/3600,posErrors); hold on;
-            xlabel('Time, hrs');ylabel('Position error [km]');
-            title(sprintf('Orbit %.0f, mean= %.2f',objects(k).noradID,mean(posErrors)));
+            rangeRateResidualPlot = figure;
+            for k = 1:nop
+                ax2(k) = subplot(ceil(nop/2),2,k);
+            end
+            for k = 1:nop
+                objIndices = find(Meas(1,:)==k);
+
+                rangeRangeRate_res = zeros(2,length(objIndices));
+                for j=1:length(objIndices)
+                    objI = objIndices(j);
+                    
+                    rangeRangeRate_est = extractSingleRangeRangeRate(X_est(:,objI),Meas(:,objI),svs,GM_kms);
+                    rangeRangeRate_res(:,j) = getResidualRangeRangeRate(rangeRangeRate_est,Meas(:,objI));
+                end
+                figure(rangeResidualPlot);
+                subplot(ax1(k))
+                plot(time(objIndices)/3600,rangeRangeRate_res(1,:)); hold on;
+                plot(time(objIndices)/3600,3*reshape(Rmeas(1,1,objIndices-1),length(objIndices),1).^0.5,'-','Color',[0.8 0.8 0.8]);
+                plot(time(objIndices)/3600,-3*reshape(Rmeas(1,1,objIndices-1),length(objIndices),1).^0.5,'-','Color',[0.8 0.8 0.8]);
+                xlabel('Time, hrs');ylabel('Range error [km]');
+                title(sprintf('Orbit %.0f, std= %.3f',objects(k).noradID,std(rangeRangeRate_res(1,:))));
+                
+                figure(rangeRateResidualPlot);
+                subplot(ax2(k))
+                plot(time(objIndices)/3600,rangeRangeRate_res(2,:)); hold on;
+                plot(time(objIndices)/3600,3*reshape(Rmeas(2,2,objIndices-1),length(objIndices),1).^0.5,'-','Color',[0.8 0.8 0.8]);
+                plot(time(objIndices)/3600,-3*reshape(Rmeas(2,2,objIndices-1),length(objIndices),1).^0.5,'-','Color',[0.8 0.8 0.8]);
+                xlabel('Time, hrs');ylabel('Range rate error [km/s]');
+                title(sprintf('Orbit %.0f, std= %.4f',objects(k).noradID,std(rangeRangeRate_res(2,:))));
+            end
+            savefig(rangeResidualPlot,[filenameBase 'rangeResiduals_' testCaseName nowTimeStr '.fig']);
+            savefig(rangeRateResidualPlot,[filenameBase 'rangeRateResiduals_' testCaseName nowTimeStr '.fig']);
         end
-        savefig(posPlot,[filenameBase 'posErr_' testCaseName nowTimeStr '.fig']);
         
-        % Plot MEE errors w.r.t. measurements
-        meePlot = figure;
-        for k = 1:nop
-            objIndices = find(Meas(1,:)==k);
-                xx_mee_est = X_est((k-1)*svs+1:(k-1)*svs+6,objIndices);
-                xx_mee_meas = Meas(2:end,objIndices);
-            for j=1:5
-                subplot(2,3,j)
-                plot(time(objIndices)/3600,xx_mee_est(j,:)-xx_mee_meas(j,:)); hold on;
+        if ~useRangeRangeRate && useMEE
+            % Plot position errors w.r.t. measurements
+            posPlot = figure;
+            for k = 1:nop
+                objIndices = find(Meas(1,:)==k);
+
+                xx_pv_est = zeros(6,length(objIndices));
+                xx_pv_meas = zeros(6,length(objIndices));
+                for j=1:length(objIndices)
+                    objI = objIndices(j);
+                    [pos,vel] = ep2pv(X_est((k-1)*svs+1:(k-1)*svs+6,objI),GM_kms);
+                    xx_pv_est(1:3,j) = pos;
+                    xx_pv_est(4:6,j) = vel;
+                    [pos,vel] = ep2pv(Meas(2:end,objI),GM_kms);
+                    xx_pv_meas(1:3,j) = pos;
+                    xx_pv_meas(4:6,j) = vel;
+                end
+                posErrors = sqrt(sum( (xx_pv_est(1:3,:)-xx_pv_meas(1:3,:)) .^2,1));
+                subplot(ceil(nop/2),2,k)
+                plot(time(objIndices)/3600,posErrors); hold on;
+                xlabel('Time, hrs');ylabel('Position error [km]');
+                title(sprintf('Orbit %.0f, mean= %.2f',objects(k).noradID,mean(posErrors)));
             end
-            subplot(2,3,6)
-            plot(time(objIndices)/3600,wrapToPi(xx_mee_est(6,:)-xx_mee_meas(6,:))); hold on;
+            savefig(posPlot,[filenameBase 'posErr_' testCaseName nowTimeStr '.fig']);
+
+            % Plot MEE errors w.r.t. measurements
+            meePlot = figure;
+            for k = 1:nop
+                objIndices = find(Meas(1,:)==k);
+                    xx_mee_est = X_est((k-1)*svs+1:(k-1)*svs+6,objIndices);
+                    xx_mee_meas = Meas(2:end,objIndices);
+                for j=1:5
+                    subplot(2,3,j)
+                    plot(time(objIndices)/3600,xx_mee_est(j,:)-xx_mee_meas(j,:)); hold on;
+                end
+                subplot(2,3,6)
+                plot(time(objIndices)/3600,wrapToPi(xx_mee_est(6,:)-xx_mee_meas(6,:))); hold on;
+            end
+            subplot(2,3,1); xlabel('Time [hours]'); ylabel('p error [km]'); legend(objectIDlabels);
+            subplot(2,3,2); xlabel('Time [hours]'); ylabel('f error [-]');
+            subplot(2,3,3); xlabel('Time [hours]'); ylabel('g error [-]');
+            subplot(2,3,4); xlabel('Time [hours]'); ylabel('h error [-]');
+            subplot(2,3,5); xlabel('Time [hours]'); ylabel('k error [-]');
+            subplot(2,3,6); xlabel('Time [hours]'); ylabel('L error [rad]');
+            savefig(meePlot,[filenameBase 'MEEerr_' testCaseName nowTimeStr '.fig']);
         end
-        subplot(2,3,1); xlabel('Time [hours]'); ylabel('p error [km]'); legend(objectIDlabels);
-        subplot(2,3,2); xlabel('Time [hours]'); ylabel('f error [-]');
-        subplot(2,3,3); xlabel('Time [hours]'); ylabel('g error [-]');
-        subplot(2,3,4); xlabel('Time [hours]'); ylabel('h error [-]');
-        subplot(2,3,5); xlabel('Time [hours]'); ylabel('k error [-]');
-        subplot(2,3,6); xlabel('Time [hours]'); ylabel('L error [rad]');
-        savefig(meePlot,[filenameBase 'MEEerr_' testCaseName nowTimeStr '.fig']);
         
         % Plot estimated density and uncertainty on local solar time v latitude grid
         slt_plot = 0:0.5:24;
