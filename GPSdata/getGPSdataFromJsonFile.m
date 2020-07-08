@@ -1,10 +1,5 @@
-function [gpsData] = getGPSdataFromJsonFile(GPSdataPath,objectPlanetIDstr,objectNORADID,yearStart,monthStart,dayStart,yearEnd,monthEnd,dayEnd)
+function [gpsData,gpsfilepath] = getGPSdataFromJsonFile(GPSdataPath,objectPlanetIDstr,objectNORADID,yearStart,monthStart,dayStart,yearEnd,monthEnd,dayEnd)
 % Example:   [xx_GPS_J2000,et,jdate] = getGPSdata('0E0E',2018,1,1,2018,1,5);
-
-% % Download GPS files
-% for i=1:31
-% websave(['gps_data_201801',num2str(i,'%02d'),'.zip'],['http://ephemerides.planet-labs.com/gps_data_201801',num2str(i,'%02d'),'.zip']);
-% end
 
 tStart  = datetime(yearStart,monthStart,dayStart);
 tEnd    = datetime(yearEnd,monthEnd,dayEnd);

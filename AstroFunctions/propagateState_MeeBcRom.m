@@ -14,6 +14,11 @@ function [xf_mee] = propagateState_MeeBcRom(x0_mee,t0,tf,AC,BC,SWinputs,r,nop,sv
 
 %------------- BEGIN CODE --------------
 
+if tf == t0
+    xf_mee = x0_mee;
+    return
+end
+
 mu = 398600.4415;
 
 xx_pv = x0_mee;
@@ -26,10 +31,14 @@ for k = 1:nop
 end
 
 opts = odeset('RelTol',1e-10,'AbsTol',1e-10,'Events', @(t,x) isdecayed(t,x,nop*size(x0_mee,2),svs));
-if tf-t0 > 2
-    [~,xf_out]=ode45(@(t,x) computeDerivative_PosVelBcRom(t,x,AC,BC,SWinputs,r,nop,svs,F_U,M_U,maxAtmAlt,et0,jdate0,highFidelity),[t0 tf],xx_pv,opts);
+if tf-t0 > 10
+    [~,xf_out]=ode113(@(t,x) computeDerivative_PosVelBcRom(t,x,AC,BC,SWinputs,r,nop,svs,F_U,M_U,maxAtmAlt,et0,jdate0,highFidelity),[t0 tf],xx_pv,opts);
 else    
-    xf_out=ode5(@(t,x) computeDerivative_PosVelBcRom(t,x,AC,BC,SWinputs,r,nop,svs,F_U,M_U,maxAtmAlt,et0,jdate0,highFidelity),[t0 tf],xx_pv);
+    tt = t0:2:tf;
+    if tt(end) ~= tf
+        tt = [tt,tf];
+    end
+    xf_out=ode5(@(t,x) computeDerivative_PosVelBcRom(t,x,AC,BC,SWinputs,r,nop,svs,F_U,M_U,maxAtmAlt,et0,jdate0,highFidelity),tt,xx_pv);
 end
 xf_pv = reshape(xf_out(end,:)',nop*svs+r,[]);
 
