@@ -1,4 +1,4 @@
-function [X_est,Pv] = UKFsingleMeasurements(X_est,Meas,time,statePredictionFnc,state2measurementFcn,residualFcn,P,RM,Q,useMEE)
+function [X_est,Pv,X_pred] = UKFsingleMeasurements(X_est,Meas,time,statePredictionFnc,state2measurementFcn,residualFcn,P,RM,Q,useMEE)
 %UKF Square-root Unscented Kalman filter
 %   X_est: initial state guess
 %   Meas: measurements
@@ -31,6 +31,7 @@ SR_Wc = sqrt(Wc); SR_Wm = sqrt(Wm);
 S=chol(P)';
 eta = sqrt(L+lam);
 
+X_pred = X_est;
 % Add initial state variance to state variance history
 Pv(:,1) = diag(P);
 
@@ -48,6 +49,7 @@ try
         [Xp] = statePredictionFnc(xx,time(i),time(i+1));
         
         X_est(:,i+1) = Wm(1) * Xp(:,1) + Wm(2) * sum(Xp(:,2:end),2);
+        X_pred(:,i+1) = X_est(:,i+1);
         
         % Process noise
         % Q is process noise for 1 hour propagation, rescale for actual
