@@ -36,7 +36,7 @@ for i=1:length(radarMeasurementsObjects)
         ecefToJ2000 = cspice_sxform('ITRF93', 'J2000', epochs(j) ); % ECEF to J2000 transformation matrix
         stationJ2000 = ecefToJ2000 * stationECEF; % State in ECEF
         meas(5:10,nofMeas+j) = stationJ2000;
-        
+
         % Measurement noise
         % Range error in km
         RM(1,1,nofMeas+j) = [radarMeasurementsObjects(i).measurements(j).corrected.rangeError] / 1e3;
@@ -55,6 +55,9 @@ RM = RM(:,:,withinWindow);
 [~, order] = sort(meas(1,:));
 meas = meas(:,order);
 RM = RM(:,:,order);
+
+RM(1,1,:) = RM(1,1,:)*1; % Multiply 1-sigma range error by factor 1
+RM(2,2,:) = RM(2,2,:)*2; % Multiply 1-sigma range-rate error by factor 2
 
 % Measurement standard deviation to covaraince
 RM = RM.^2;
