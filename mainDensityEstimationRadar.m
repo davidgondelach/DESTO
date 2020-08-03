@@ -59,9 +59,10 @@ ROMmodel = 'JB2008_1999_2010';  % Name of reduced-order density model: JB2008_19
 r  = 10;                        % Reduced order
 
 % NORAD catalog IDs of objects used for estimation
-% Default: 17 objects: [63;165;614;2153;2622;4221;6073;7337;8744;12138;12388;14483;20774;23278;27391;27392;26405]
-% selectedObjects = [63;165;614;2153;2622;4221;6073;7337;8744;12138;12388;14483;20774;23278;27391;27392;26405]; % TLE
-selectedObjects = [614;2153;2622;4221;12138]; % Radar
+% Default: Radar: 15 objects: [614;750;2016;2153;2389;2622;4221;6073;7337;8744;12138;12388;14483;20774;23278]
+% selectedObjects = [614;2153;2622;4221;12138]; % Radar: 5 objects
+selectedObjects = [614;2153;2389;2622;4221;7337;8744;12138;12388;14483;20774;23278]; % Radar: 12 objects
+selectedObjects = sortrows(selectedObjects);
 
 % Display date
 datetime(yr,mth,dy)
