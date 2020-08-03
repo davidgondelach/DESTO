@@ -43,7 +43,7 @@ function runDensityEstimationGPS(yr,mth,dy,hr,mn,sc,nofDays,ROMmodel,r,selectedO
 %  Author: David Gondelach
 %  Massachusetts Institute of Technology, Dept. of Aeronautics and Astronautics
 %  email: davidgondelach@gmail.com
-%  Jan 2020; Last revision: 31-Jan-2020
+%  Jun 2020; Last revision: 03-Aug-2020
 %
 %  Reference:
 %  D.J. Gondelach and R. Linares, "Real-Time Thermospheric Density
@@ -86,7 +86,6 @@ try
     % Time Interval for measurements
     dt = 3600;
     tf = (jdf-jd0)*24*60*60;
-%     time = [0:dt:tf]'; m=length(time);
     
     %% Load space weather data
     SWpath = fullfile('Data','SW-All.txt');
@@ -100,24 +99,20 @@ try
     BCfilePath = fullfile('Data','BCdata.txt');
     [BCdata] = loadBCdata( BCfilePath );
     
-    rng(1);
+    % Initial BC uncertainty
+    BCerror = 0.02; % 2% BC 1-sigma error
+    
+    rng(7);
     % Extract orbital data and BC data for selected objects
     for i=1:length(selectedObjects)
         % NORAD ID
         ID = selectedObjects(i);
-%         % Orbital data (duplicate to ensure data is available)
-%         index = find([objects.noradID]==ID);
-%         if isempty(index)
-%             error('No TLEs found for object %.0f.', ID);
-%         end
-%         % Get object's TLE data
-%         newObjects(i) = objects(index);
         % Ballistic coefficient
-%         BCestimates(i) = BCdata(BCdata(:,1)==ID,2);
+        BCestimates(i) = BCdata(BCdata(:,1)==ID,2);
         % Skysat BC estimate:
-        BCestimates(i) = 0.01376 * (1 + randn(1)*0.2);
+%         BCestimates(i) = 0.01376 * (1 + randn(1)*BCerror); % Old assumed BC estimate for Skysats
+%         BCestimates(i) = 0.01626; % New debiased BC estimate for Skysats
     end
-%     objects = newObjects;
     
     % Number of objects
     nop = length(selectedObjects);
@@ -138,10 +133,11 @@ try
     Meas = gpsMeas(2:end,:); % Measurements
     
     % GPS measurement covariance
+    gpsError = 0.005; % GPS measurement 1-sigma = 5 meters
     RM = zeros(3,3,size(gpsMeas,2));
-    RM(1,1,:) = 0.02^2; % GPS measurement 1-sigma = 20 meters
-    RM(2,2,:) = RM(1,1,:);
-    RM(3,3,:) = RM(1,1,:);
+    RM(1,1,:) = gpsError^2;
+    RM(2,2,:) = gpsError^2;
+    RM(3,3,:) = gpsError^2;
     
     
     %% Load reduced-order density models
@@ -155,13 +151,15 @@ try
     
     % Initial state guess: Orbits, BCs and reduced order density
     x0g = zeros(svs*nop+r,1);
-    Pv = zeros(svs*nop+r,1); % state variance
+    % Initial state covariance
+    Pv = zeros(svs*nop+r,1);
+    
+    % Initial position and velocity covariance
     P_GPS = diag( [0.04 0.04 0.04 2e-4 2e-4 2e-4].^2 ); % position 1-sigma = 40m, velocity 1-sigma = 0.2 m/s
 
     for i = 1:nop
         % Get initial position and velocity from propagated GPS state
         [posVelAtET0] = getPositionVelocityFromGPSmeas(gpsDataPath,selectedObjects(i),BCestimates(i),et0);
-%         x0g(svs*(i-1)+1:svs*(i-1)+6,1) = pv2ep( posVelAtET0(1:3), posVelAtET0(4:6), GM_kms );
         
         % Convert assumed pos/vel covariance to MEE
         [meeState,meeCov] = cartCov2meeCov(posVelAtET0, P_GPS, GM_kms);
@@ -171,7 +169,7 @@ try
         % Ballistic coefficient guesses
         x0g(svs*i) = BCestimates(i) * 1000;
         % Initial variance for ballistic coefficient
-        Pv(svs*(i-1)+7) = (x0g(svs*i) * 0.2)^2; % 1% BC 1-sigma error
+        Pv(svs*(i-1)+7) = (x0g(svs*i) * BCerror)^2;
     end
 
     
@@ -202,36 +200,25 @@ try
     
     %% Process noise Q and initial state covariance P
     
-    
     Qv = zeros(svs*nop+r,1); % process variance
     for i = 1:nop
         if useMEE
             
-            
-%             % Initial variance for orbital state in MEE (equal to measurement noise)
-%             Pv(svs*(i-1)+1) = R_TLE(6*(i-1)+1,6*(i-1)+1);
-%             Pv(svs*(i-1)+2) = R_TLE(6*(i-1)+2,6*(i-1)+2);
-%             Pv(svs*(i-1)+3) = R_TLE(6*(i-1)+3,6*(i-1)+3);
-%             Pv(svs*(i-1)+4) = R_TLE(6*(i-1)+4,6*(i-1)+4);
-%             Pv(svs*(i-1)+5) = R_TLE(6*(i-1)+5,6*(i-1)+5);
-%             Pv(svs*(i-1)+6) = R_TLE(6*(i-1)+6,6*(i-1)+6);
-            
-            % Process noise for orbital state in MEE
-            Qv(svs*(i-1)+1) = 1.5e-8;
-            Qv(svs*(i-1)+2) = 2e-14;
-            Qv(svs*(i-1)+3) = 2e-14;
-            Qv(svs*(i-1)+4) = 1e-14;
-            Qv(svs*(i-1)+5) = 1e-14;
-            Qv(svs*(i-1)+6) = 1e-12;
+            % Process noise for orbital state in MEE for 1 hour            
+%             Qv(svs*(i-1)+1) = 1.5e-08;
+%             Qv(svs*(i-1)+2) = 3.2e-13;
+%             Qv(svs*(i-1)+3) = 3.2e-13;
+%             Qv(svs*(i-1)+4) = 4.0e-14;
+%             Qv(svs*(i-1)+5) = 4.0e-14;
+%             Qv(svs*(i-1)+6) = 4.0e-14;
             
             % Process noise for orbital state in MEE for 1 hour converted to per second
-            % higherProcessNoise
-            Qv(svs*(i-1)+1) = 9.6e-19;
-            Qv(svs*(i-1)+2) = 1.3e-24;
-            Qv(svs*(i-1)+3) = 1.3e-24;
-            Qv(svs*(i-1)+4) = 6.4e-25;
-            Qv(svs*(i-1)+5) = 6.4e-25;
-            Qv(svs*(i-1)+6) = 6.4e-23;
+            Qv(svs*(i-1)+1) = 2.0e-15; %1.953125e-15;
+            Qv(svs*(i-1)+2) = 4.2e-20; %4.16666666666667e-20;
+            Qv(svs*(i-1)+3) = 4.2e-20; %4.16666666666667e-20;
+            Qv(svs*(i-1)+4) = 5.2e-21; %5.20833333333333e-21;
+            Qv(svs*(i-1)+5) = 5.2e-21; %5.20833333333333e-21;
+            Qv(svs*(i-1)+6) = 5.2e-21; %1.30208333333333e-21;
         else
             P_GPS = diag( [0.04 0.04 0.04 2e-4 2e-4 2e-4].^2 ); % position 1-sigma = 40m, velocity 1-sigma = 0.2 m/s
             
@@ -248,7 +235,6 @@ try
         end
         
         % Process noise for ballistic coefficient
-%         Qv(svs*(i-1)+7) = 1e-16; % 1-sigma error: 1e-8 per 1 hour
         Qv(svs*(i-1)+7) = 2.7e-20; % 1-sigma error: 1e-8 per 1 hour => cov: 1e-16/3600 = 2.7e-20 per second
     end
     
@@ -257,7 +243,8 @@ try
     Pv(end-r+1) = 2e1; % First mode
     
     % Process noise for reduced-order density state
-    % Use variance of ROM model 1-hour prediction error w.r.t. the training data
+    % Use variance of ROM model 1-hour prediction error w.r.t. the training
+    % data converted to per second
     Qv(end-r+1:end) = diag(Qrom) / 3600;
     
     % Initial state covariance and process noise matrices
@@ -288,7 +275,6 @@ try
         % Add dummy measurement at t0
         Meas = [zeros(size(Meas,1),1), Meas];
     end
-%     [X_est,Pv] = UKFsingleMeasurements(X_est,Meas,time,stateFnc,state2measurementFcn,residualFcn,P,RM,Q,useMEE);
     [X_est,Pv,X_pred] = UKFsingleMeasurements_newProcessNoise(X_est,Meas,time,stateFnc,state2measurementFcn,residualFcn,P,RM,Q,svs,r,useMEE);
     
     global resultsDirPath
@@ -296,13 +282,11 @@ try
     filenameBase = [resultsDirPath 'ukf_rom_gps_' ROMmodel '_'];
     testCaseName = [sprintf('%04d',yr), sprintf('%02d',mth), sprintf('%02d',dy), '_', num2str(nofDays) 'd_', num2str(nop), 'obj_'];
     
-    save('workspace');
-    
     save([filenameBase 'workspace_' testCaseName nowTimeStr]);
     
     %% Plot results
     if plotFigures
-        
+        Colors = colormap('lines');
         
         % Plot estimated ROM modes and corresponding uncertainty
         ROMplot = figure;
@@ -367,76 +351,7 @@ try
         subplot(2,3,5); xlabel('Time [hours]'); ylabel('\sigma_k [-]');
         subplot(2,3,6); xlabel('Time [hours]'); ylabel('\sigma_L [rad]');
         savefig(meeCovPlot,[filenameBase 'MEEcov_' testCaseName nowTimeStr '.fig']);
-        
-%         % Plot uncertainty in measurements: equinoctial orbital elements
-%         measCovPlot = figure;
-%         if useRangeRangeRate
-%             for i = 1:nop
-%                 objIndices = find(Meas(1,:)==i)-1;
-%                 for j=1:2
-%                     subplot(1,2,j); hold on;
-%                     plot(time(objIndices)/3600,reshape(Rmeas(j,j,objIndices),length(objIndices),1).^0.5);
-%                 end
-%             end
-%             subplot(1,2,1); xlabel('Time [hours]'); ylabel('\sigma_{range} [km]'); legend(objectIDlabels);
-%             subplot(1,2,2); xlabel('Time [hours]'); ylabel('\sigma_{rangerate} [km/s]');
-%         else
-%             for i = 1:nop
-%                 objIndices = find(Meas(1,:)==i)-1;
-%                 for j=1:6
-%                     subplot(2,3,j); hold on;
-%                     plot(time(objIndices)/3600,reshape(Rmeas(j,j,objIndices),length(objIndices),1).^0.5);
-%                 end
-%             end
-%             subplot(2,3,1); xlabel('Time [hours]'); ylabel('\sigma_p [km]'); legend(objectIDlabels);
-%             subplot(2,3,2); xlabel('Time [hours]'); ylabel('\sigma_f [-]');
-%             subplot(2,3,3); xlabel('Time [hours]'); ylabel('\sigma_g [-]');
-%             subplot(2,3,4); xlabel('Time [hours]'); ylabel('\sigma_h [-]');
-%             subplot(2,3,5); xlabel('Time [hours]'); ylabel('\sigma_k [-]');
-%             subplot(2,3,6); xlabel('Time [hours]'); ylabel('\sigma_L [rad]');
-%         end
-%         savefig(measCovPlot,[filenameBase 'measCov_' testCaseName nowTimeStr '.fig']);
-%         
-%         if useRangeRangeRate
-%             % Plot position errors w.r.t. measurements
-%             rangeResidualPlot = figure;
-%             for k = 1:nop
-%                 ax1(k) = subplot(ceil(nop/2),2,k);
-%             end
-%             rangeRateResidualPlot = figure;
-%             for k = 1:nop
-%                 ax2(k) = subplot(ceil(nop/2),2,k);
-%             end
-%             for k = 1:nop
-%                 objIndices = find(Meas(1,:)==k);
-% 
-%                 rangeRangeRate_res = zeros(2,length(objIndices));
-%                 for j=1:length(objIndices)
-%                     objI = objIndices(j);
-%                     
-%                     rangeRangeRate_est = extractSingleRangeRangeRate(X_est(:,objI),Meas(:,objI),svs,GM_kms);
-%                     rangeRangeRate_res(:,j) = getResidualRangeRangeRate(rangeRangeRate_est,Meas(:,objI));
-%                 end
-%                 figure(rangeResidualPlot);
-%                 subplot(ax1(k))
-%                 plot(time(objIndices)/3600,rangeRangeRate_res(1,:)); hold on;
-%                 plot(time(objIndices)/3600,3*reshape(Rmeas(1,1,objIndices-1),length(objIndices),1).^0.5,'-','Color',[0.8 0.8 0.8]);
-%                 plot(time(objIndices)/3600,-3*reshape(Rmeas(1,1,objIndices-1),length(objIndices),1).^0.5,'-','Color',[0.8 0.8 0.8]);
-%                 xlabel('Time, hrs');ylabel('Range error [km]');
-%                 title(sprintf('Orbit %.0f, std= %.3f',objects(k).noradID,std(rangeRangeRate_res(1,:))));
-%                 
-%                 figure(rangeRateResidualPlot);
-%                 subplot(ax2(k))
-%                 plot(time(objIndices)/3600,rangeRangeRate_res(2,:)); hold on;
-%                 plot(time(objIndices)/3600,3*reshape(Rmeas(2,2,objIndices-1),length(objIndices),1).^0.5,'-','Color',[0.8 0.8 0.8]);
-%                 plot(time(objIndices)/3600,-3*reshape(Rmeas(2,2,objIndices-1),length(objIndices),1).^0.5,'-','Color',[0.8 0.8 0.8]);
-%                 xlabel('Time, hrs');ylabel('Range rate error [km/s]');
-%                 title(sprintf('Orbit %.0f, std= %.4f',objects(k).noradID,std(rangeRangeRate_res(2,:))));
-%             end
-%             savefig(rangeResidualPlot,[filenameBase 'rangeResiduals_' testCaseName nowTimeStr '.fig']);
-%             savefig(rangeRateResidualPlot,[filenameBase 'rangeRateResiduals_' testCaseName nowTimeStr '.fig']);
-%         end
-        
+        %%
         if useMEE
             % Plot position errors w.r.t. measurements
             posPlot = figure;
@@ -446,44 +361,52 @@ try
                 xx_pv_est = zeros(3,length(objIndices));
                 xx_pv_pred = zeros(3,length(objIndices));
                 xx_pv_meas = zeros(3,length(objIndices));
+                posDiff_post_RTN = zeros(3,length(objIndices));
+                posDiff_pre_RTN = zeros(3,length(objIndices));
+                posDiff_pre = zeros(3,length(objIndices));
+                posCov = zeros(3,length(objIndices));
+                posCovRTN = zeros(3,length(objIndices));
                 for j=1:length(objIndices)
                     objI = objIndices(j);
-                    [pos_est,~] = ep2pv(X_est((k-1)*svs+1:(k-1)*svs+6,objI),GM_kms);
+                    [pos_est,vel_est] = ep2pv(X_est((k-1)*svs+1:(k-1)*svs+6,objI),GM_kms);
                     xx_pv_est(1:3,j) = pos_est;
                     [pos_pred,~] = ep2pv(X_pred((k-1)*svs+1:(k-1)*svs+6,objI),GM_kms);
                     xx_pv_pred(1:3,j) = pos_pred;
                     xx_pv_meas(1:3,j) = Meas(2:end,objI);
+                    
+                    posDiff_post = (xx_pv_est(1:3,j)-xx_pv_meas(1:3,j));
+                    posDiff_pre(:,j) = (xx_pv_pred(1:3,j)-xx_pv_meas(1:3,j));
+                    
+                    [cart2rtnMatrix] = computeCart2RTNMatrix(pos_est, vel_est);
+                    posDiff_post_RTN(:,j) = cart2rtnMatrix*posDiff_post;
+                    posDiff_pre_RTN(:,j) = cart2rtnMatrix*posDiff_pre(:,j);
+                    
+                    meeCov = diag(Pv((k-1)*svs+1:(k-1)*svs+6,objI));
+                    [~,posVelCov] = meeCov2cartCov(X_est((k-1)*svs+1:(k-1)*svs+6,objI),meeCov,GM_kms);
+                    posCov(:,j) = diag(posVelCov(1:3,1:3));
+                    posCovRTNfull = cart2rtnMatrix*posVelCov(1:3,1:3)*cart2rtnMatrix';
+                    posCovRTN(:,j) = diag(posCovRTNfull);
                 end
                 posErrors_post = sqrt(sum( (xx_pv_est(1:3,:)-xx_pv_meas(1:3,:)) .^2,1));
                 posErrors_pre = sqrt(sum( (xx_pv_pred(1:3,:)-xx_pv_meas(1:3,:)) .^2,1));
-                subplot(ceil(nop/2),2,k)
+                subplot(ceil(nop),2,k*2-1)
                 plot(time(objIndices)/3600,posErrors_post); hold on;
-                plot(time(objIndices)/3600,posErrors_pre); hold on;
+                subplot(ceil(nop),2,k*2)
+                plot(time(objIndices)/3600,posErrors_pre,'Color',Colors(4,:)); hold on;
+                plot(time(objIndices)/3600,posDiff_pre_RTN(1,:),'Color',Colors(1,:)); hold on;
+                plot(time(objIndices)/3600,posDiff_pre_RTN(2,:),'Color',Colors(2,:)); hold on;
+                plot(time(objIndices)/3600,posDiff_pre_RTN(3,:),'Color',Colors(3,:)); hold on;
+                plot(time(objIndices)/3600,2*(sqrt(posCovRTN(1,:))),'--','Color',Colors(1,:)); hold on;
+                plot(time(objIndices)/3600,2*(sqrt(posCovRTN(2,:))),'--','Color',Colors(2,:)); hold on;
+                plot(time(objIndices)/3600,2*(sqrt(posCovRTN(3,:))),'--','Color',Colors(3,:)); hold on;
+                plot(time(objIndices)/3600,-2*(sqrt(posCovRTN(1,:))),'--','Color',Colors(1,:)); hold on;
+                plot(time(objIndices)/3600,-2*(sqrt(posCovRTN(2,:))),'--','Color',Colors(2,:)); hold on;
+                plot(time(objIndices)/3600,-2*(sqrt(posCovRTN(3,:))),'--','Color',Colors(3,:)); hold on;
                 xlabel('Time, hrs');ylabel('Position error [km]');
                 title(sprintf('Orbit %.0f, mean= %.4f',selectedObjects(k),mean(posErrors_post)));
             end
-            savefig(posPlot,[filenameBase 'posErr_' testCaseName nowTimeStr '.fig']);
+            savefig(posPlot,[filenameBase 'posErr_' testCaseName nowTimeStr '_RTN_2sigma.fig']);
 
-%             % Plot MEE errors w.r.t. measurements
-%             meePlot = figure;
-%             for k = 1:nop
-%                 objIndices = find(Meas(1,:)==k);
-%                     xx_mee_est = X_est((k-1)*svs+1:(k-1)*svs+6,objIndices);
-%                     xx_mee_meas = Meas(2:end,objIndices);
-%                 for j=1:5
-%                     subplot(2,3,j)
-%                     plot(time(objIndices)/3600,xx_mee_est(j,:)-xx_mee_meas(j,:)); hold on;
-%                 end
-%                 subplot(2,3,6)
-%                 plot(time(objIndices)/3600,wrapToPi(xx_mee_est(6,:)-xx_mee_meas(6,:))); hold on;
-%             end
-%             subplot(2,3,1); xlabel('Time [hours]'); ylabel('p error [km]'); legend(objectIDlabels);
-%             subplot(2,3,2); xlabel('Time [hours]'); ylabel('f error [-]');
-%             subplot(2,3,3); xlabel('Time [hours]'); ylabel('g error [-]');
-%             subplot(2,3,4); xlabel('Time [hours]'); ylabel('h error [-]');
-%             subplot(2,3,5); xlabel('Time [hours]'); ylabel('k error [-]');
-%             subplot(2,3,6); xlabel('Time [hours]'); ylabel('L error [rad]');
-%             savefig(meePlot,[filenameBase 'MEEerr_' testCaseName nowTimeStr '.fig']);
         end
         
         % Plot estimated density and uncertainty on local solar time v latitude grid
