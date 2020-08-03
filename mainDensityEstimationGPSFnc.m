@@ -98,7 +98,7 @@ addpath( 'JB2008' );
 addpath( 'ROMDensityModels' );
 addpath( 'SpaceWeather' );
 % addpath( 'TLEdata' );
-addpath( 'GPSData' );
+addpath( 'GPSdata' );
 addpath( 'UncertaintyPropagation' );
 addpath( fullfile(spicePath,'src','mice') );
 addpath( fullfile(spicePath,'lib') );

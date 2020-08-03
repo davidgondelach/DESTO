@@ -55,16 +55,14 @@ nofDays = 1;   % Number of days
 highFidelity = true;
 
 % Reduced-order model
-ROMmodel = 'NRLMSISE_1997_2008';  % Name of reduced-order density model: JB2008_1999_2010, NRLMSISE_1997_2008 or TIEGCM_1997_2008
+ROMmodel = 'JB2008_1999_2010';  % Name of reduced-order density model: JB2008_1999_2010, NRLMSISE_1997_2008 or TIEGCM_1997_2008
 r  = 10;                        % Reduced order
 
 % NORAD catalog IDs of objects used for estimation
-% Default: 17 objects: [63;165;614;2153;2622;4221;6073;7337;8744;12138;12388;14483;20774;23278;27391;27392;26405]
-% selectedObjects = [63;165;614;2153;2622;4221;6073;7337;8744;12138;12388;14483;20774;23278;27391;27392;26405]; % TLE
-% selectedObjects = [614;2153;2622;4221;12138]; % Radar
-% selectedObjects = [614;2153;2622;4221;12138;750;2016;2389;6073;7337;8744;12388;14483;20774;23278]; % Radar
-selectedObjects = [39418,41601,41771,41772,41773,41774,42987,42988,42989,42990,42991,42992,43797,43802]; % GPS: Planet Skysats
-selectedObjects = [41601,41771,41772,41773,43802]; % GPS: Planet Skysats
+% Default: GPS: 14 Planet Skysats: [39418,41601,41771,41772,41773,41774,42987,42988,42989,42990,42991,42992,43797,43802]
+% selectedObjects = [41771,41773,41774,42987,42988,42989,42990,42992,43797,43802]; % GPS: 10 Planet Skysats : May 1-30
+selectedObjects = [41771,41773,42987,42988,43802]; % GPS: 5 Planet Skysats : May 1-30
+
 selectedObjects = sortrows(selectedObjects);
 
 % Display date
@@ -83,7 +81,6 @@ addpath( 'Estimation' );
 addpath( 'JB2008' );
 addpath( 'ROMDensityModels' );
 addpath( 'SpaceWeather' );
-% addpath( 'TLEdata' );
 addpath( 'GPSdata' );
 addpath( 'UncertaintyPropagation' );
 addpath( fullfile(spicePath,'src','mice') );
