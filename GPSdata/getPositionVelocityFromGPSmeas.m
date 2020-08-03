@@ -29,6 +29,11 @@ gps_state = gpsData(closestGPSmeas).xx_J2000;
 et_state = gpsData(closestGPSmeas).tET;
 
 deltaET = et0 - et_state;
+if deltaET == 0
+    posVelAtET0 = gps_state;
+    return
+end
+
 stateBC = [gps_state; BC];
 
 settingsJB2000.drag=3;
