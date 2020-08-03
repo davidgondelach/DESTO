@@ -1,19 +1,19 @@
 function runDensityEstimationRadar(yr,mth,dy,hr,mn,sc,nofDays,ROMmodel,r,selectedObjects,varargin)
 %runDensityEstimationTLE - Estimate thermospheric density using TLE data.
-% 
+%
 %  runDensityEstimationTLE(yr,mth,dy,nofDays,ROMmodel,r,selectedObjects) -
-%     Estimate thermospheric density using TLE data: 
-%     1) load TLE data, 2) load ballistic coefficient data, 3) generate 
+%     Estimate thermospheric density using TLE data:
+%     1) load TLE data, 2) load ballistic coefficient data, 3) generate
 %     observations from TLE data, 4) generate reduced-order density model,
 %     5) initialize reduced-order density state, 6) set initial orbital
-%     state guesses, 7) set measurement and process noise, 8) set initial  
+%     state guesses, 7) set measurement and process noise, 8) set initial
 %     state covariance, 9) run unscented Kalman filter to simultaneously
 %     estimate the orbital states, ballistic coefficients and thermospheric
 %     density from TLE-derived orbit observations.
-% 
+%
 %  runDensityEstimationTLE(yr,mth,dy,nofDays,ROMmodel,r,selectedObjects,plotFigures)
 %     Estimate thermospheric density using TLE data and plot results.
-% 
+%
 %     yr                - start date: year
 %     mth               - start date: month
 %     dy                - start date: day
@@ -23,33 +23,33 @@ function runDensityEstimationRadar(yr,mth,dy,hr,mn,sc,nofDays,ROMmodel,r,selecte
 %     selectedObjects   - NORAD IDs of objects used for estimation
 %     plotFigures       - boolean: if true then plot results
 %
-% 
+%
 %     Copyright (C) 2020 by David Gondelach
-% 
+%
 %     This program is free software: you can redistribute it and/or modify
 %     it under the terms of the GNU General Public License as published by
 %     the Free Software Foundation, either version 3 of the License, or
 %     (at your option) any later version.
-% 
+%
 %     This program is distributed in the hope that it will be useful,
 %     but WITHOUT ANY WARRANTY; without even the implied warranty of
 %     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 %     GNU General Public License for more details.
-% 
+%
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-% 
-% 
+%
+%
 %  Author: David Gondelach
 %  Massachusetts Institute of Technology, Dept. of Aeronautics and Astronautics
 %  email: davidgondelach@gmail.com
-%  Jan 2020; Last revision: 31-Jan-2020
+%  Jun 2020; Last revision: 03-Aug-2020
 %
 %  Reference:
 %  D.J. Gondelach and R. Linares, "Real-Time Thermospheric Density
 %  Estimation Via Two-Line-Element Data Assimilation", Space Weather, 2020
 %  https://doi.org/10.1029/2019SW002356 or https://arxiv.org/abs/1910.00695
-% 
+%
 
 %------------- BEGIN CODE --------------
 
@@ -77,16 +77,11 @@ try
     jd0 = juliandate(datetime(yr,mth,dy,hr,mn,sc));
     jdf = juliandate(datetime(yr,mth,dy+nofDays,hr,mn,sc));
     
-    % Initial Ephemeris Time (ET): ET is the number of seconds past the 
-    % epoch of the J2000 reference frame in the time system known as 
+    % Initial Ephemeris Time (ET): ET is the number of seconds past the
+    % epoch of the J2000 reference frame in the time system known as
     % Barycentric Dynamical Time (TDB).
     et0  = cspice_str2et(strcat([num2str(jed2date(jd0),'%d %d %d %d %d %.10f') 'UTC']));
     etf  = cspice_str2et(strcat([num2str(jed2date(jdf),'%d %d %d %d %d %.10f') 'UTC']));
-    
-    % Time Interval for measurements
-    dt = 3600;
-    tf = (jdf-jd0)*24*60*60;
-    time = [0:dt:tf]'; m=length(time);
     
     %% Load space weather data
     SWpath = fullfile('Data','SW-All.txt');
@@ -95,10 +90,10 @@ try
     [eopdata,SOLdata,DTCdata] = loadJB2008SWdata();
     
     %% Get TLE data
-    % Load a bit more TLEs than needed to plot the TLE data 
+    % Load a bit more TLEs than needed to plot the TLE data
     maxAlt = 10000; % Maximum altitude of apogee [km], TLEs for objects with higher apogee will not be downloaded
-    jdate0TLEs = juliandate(datetime(yr,mth,1,0,0,0));      % Start date of TLE collection window 
-    [yrf, mthf, dyf, ~, ~, ~] = datevec(jdf+30-1721058.5);  % End date of TLE collection window 
+    jdate0TLEs = juliandate(datetime(yr,mth,1,0,0,0));      % Start date of TLE collection window
+    [yrf, mthf, dyf, ~, ~, ~] = datevec(jdf+30-1721058.5);  % End date of TLE collection window
     
     % Download or read TLE data
     downloadTLEs = false;
@@ -141,9 +136,8 @@ try
     for i=1:nop
         objectIDlabels(i) = {num2str(objects(i).noradID)};
     end
-
+    
     %% Generate observations from TLE data
-%     obsEpochs = jd0:dt/86400:jdf;
     obsEpochs = jd0;
     [meeMeasTLE] = generateObservationsMEE(objects,obsEpochs,GM_kms);
     
@@ -175,6 +169,102 @@ try
         [radarStations] = getRadarStations(measurementsPath);
         [measRangeRangeRate,Rmeas] = generateRangeRangeRateObsFromRadarMeas(radarMeasurementsObjects,radarStations,et0,etf);
         
+        %% Compare measurements against TLE data and filter out outliers
+        TLEdata = struct('position',{},'velocity',{},'range',{},'rangerate',{});
+        
+        nop = length(selectedObjects);
+        for i=1:nop
+            % NORAD ID
+            ID = selectedObjects(i);
+            % Orbital data (duplicate to ensure data is available)
+            index = find([objects.noradID]==ID);
+            
+            meas = measRangeRangeRate(:,measRangeRangeRate(2,:)==i);
+            nofMeas = size(meas,2);
+            rj2000 = zeros(3,nofMeas);
+            vj2000 = zeros(3,nofMeas);
+            rangeAndRangeRate = zeros(2,nofMeas);
+            for j=1:size(meas,2)
+                % Observation epoch
+                et = meas(1,j);
+                jdatestr    = cspice_et2utc( et, 'J', 12 );
+                obsJdate    = str2double(jdatestr(4:end)); % Cut trailing 'JD ' off from string
+                % Find nearest newer TLE
+                satrecIndex = find([objects(index).satrecs.jdsatepoch]>=obsJdate,1,'first');
+                diffObsTLEEpochMinutes = (obsJdate - objects(index).satrecs(satrecIndex).jdsatepoch) * 24*60;
+                % Compute SGP4 state at epoch
+                [~, rtemeObs ,vtemeObs] = sgp4( objects(index).satrecs(satrecIndex), diffObsTLEEpochMinutes );
+                % Convert to J2000
+                [rj2000(:,j), vj2000(:,j)] = convertTEMEtoJ2000(rtemeObs', vtemeObs', obsJdate);
+                
+                rSiteECI = meas(5:7,j);
+                vSiteECI = meas(8:10,j);
+                rangeAndRangeRate(:,j) = computeRangeAndRangeRate(rj2000(:,j), vj2000(:,j),rSiteECI,vSiteECI);
+            end
+            TLEdata(i).position = rj2000;
+            TLEdata(i).velocity = vj2000;
+            TLEdata(i).range = rangeAndRangeRate(1,:);
+            TLEdata(i).rangerate = rangeAndRangeRate(2,:);
+        end
+        
+        for i=1:nop
+            objIndices = find(measRangeRangeRate(2,:)==i);
+            measRange = measRangeRangeRate(3,objIndices);
+            measRangeRate = measRangeRangeRate(4,objIndices);
+            
+            % Difference in range between measurement and TLE
+            diffRange = measRange - TLEdata(i).range;
+            % Filter out measurements with range diff > 1 km
+            rangeDiffThreshold = 1.0; % 1km
+            diffRangeOutlier = abs(diffRange) > rangeDiffThreshold;
+            % Filter out outlying range measurements
+            diffRangeOutlier = diffRangeOutlier | isoutlier(diffRange,'movmedian',[5 2]);
+            % Filter out first and last measurement of pass
+            % (different passes are assumed to be separated by more than 5 minutes)
+            timeBetweenPassesThreshold = 5*60; % 5 minutes
+            diffRangeOutlier = diffRangeOutlier | [true diff( measRangeRangeRate(1,objIndices) ) > timeBetweenPassesThreshold];
+            diffRangeOutlier = diffRangeOutlier | [diff( measRangeRangeRate(1,objIndices) ) > timeBetweenPassesThreshold true];
+            
+            % Difference in range rate between measurement and TLE
+            diffRangeRate = measRangeRate - TLEdata(i).rangerate;
+            % Filter out measurements with range rate diff > 0.02 km
+            rangeRateDiffThreshold = 0.02; %0.02km
+            diffRangeRateOutlier = abs(diffRangeRate) > rangeRateDiffThreshold;
+            
+            % Outliers in range or range rate
+            outlierIndices = objIndices(diffRangeOutlier|diffRangeRateOutlier);
+            
+%             hours = ( measRangeRangeRate(1,objIndices) - et0 ) / 3600;
+%             errRange = squeeze( Rmeas(1,1,objIndices).^(0.5) );
+%             errRangeRate = squeeze( Rmeas(2,2,objIndices).^(0.5) );
+%             figure;
+%             subplot(2,1,1); hold on;
+%             scatter(hours,diffRange,10);
+%             plot(hours(diffRangeOutlier),diffRange(diffRangeOutlier),'r.');
+%             plot(hours(diffRangeRateOutlier),diffRange(diffRangeRateOutlier),'c.');
+%             plot(hours,3*errRange,'-','Color',[0.8 0.8 0.8]);
+%             plot(hours,-3*errRange,'-','Color',[0.8 0.8 0.8]);
+%             title(objectIDlabels(i));
+%             xlabel('Hours');
+%             ylabel('Range diff [km]');
+%             
+%             subplot(2,1,2); hold on;
+%             scatter(hours,diffRangeRate,10);
+%             plot(hours(diffRangeOutlier),diffRangeRate(diffRangeOutlier),'c.');
+%             plot(hours(diffRangeRateOutlier),diffRangeRate(diffRangeRateOutlier),'r.');
+%             plot(hours,3*errRangeRate,'-','Color',[0.8 0.8 0.8]);
+%             plot(hours,-3*errRangeRate,'-','Color',[0.8 0.8 0.8]);
+%             title('meas - TLE');
+%             xlabel('Hours');
+%             ylabel('Range rate diff [km/s]');
+            
+            % Remove outliers
+            measRangeRangeRate(:,outlierIndices) =[];
+            Rmeas(:,:,outlierIndices) = [];
+            TLEdata(i).range(diffRangeOutlier|diffRangeRateOutlier) = [];
+            TLEdata(i).rangerate(diffRangeOutlier|diffRangeRateOutlier) = [];
+        end
+        
         measEpochs = measRangeRangeRate(1,:); % Time of measurement
         Meas = measRangeRangeRate(2:end,:); % Measurements
     else
@@ -200,8 +290,6 @@ try
     
     
     %% Generate initial state guess
-    % Use orbital state from TLE as initial orbital state guess
-%     x0orbits = meeMeas(:,1);
     
     % Size of state vector for each object [3xpos,3xvel,1xBC]
     svs = 7;
@@ -209,11 +297,12 @@ try
     % Initial state guess: Orbits, BCs and reduced order density
     x0g = zeros(svs*nop+r,1);
     for i = 1:nop
+        % Use orbital state from TLE as initial orbital state guess
         if useMEE
-            % Orbital state guesses in modified equinoctial elements
+            % Orbital state in modified equinoctial elements
             x0g(svs*(i-1)+1:svs*(i-1)+6,1) = meeMeasTLE(6*(i-1)+1:6*(i-1)+6,1);
         else
-            % Orbital state guesses in position and velocity
+            % Orbital state in position and velocity
             [x0g(svs*(i-1)+1:svs*(i-1)+3,1),x0g(svs*(i-1)+4:svs*(i-1)+6,1)] = ep2pv( meeMeasTLE(6*(i-1)+1:6*(i-1)+6,1), GM_kms);
         end
         % Ballistic coefficient guesses
@@ -245,11 +334,8 @@ try
     x0g(end-r+1:end,1) = z0_M;
     
     
-    %% Measurements and covariance
-    % TLE-derived orbit observations in modified equinoctial elements
-%     Meas = meeMeas;
-    
-    % Measurement noise
+    %% TLE measurement covariance
+    % Measurement noise for TLE-derived orbit observations in modified equinoctial elements
     R_TLE = [];
     for i = 1:nop
         RMfactor = max(objects(i).satrecs(1).ecco/0.004,1);
@@ -272,17 +358,34 @@ try
             Pv(svs*(i-1)+6) = R_TLE(6*(i-1)+6,6*(i-1)+6);
             
             % Process noise for orbital state in MEE
-            Qv(svs*(i-1)+1) = 1.5e-8;
-            Qv(svs*(i-1)+2) = 2e-14;
-            Qv(svs*(i-1)+3) = 2e-14;
-            Qv(svs*(i-1)+4) = 1e-14;
-            Qv(svs*(i-1)+5) = 1e-14;
-            Qv(svs*(i-1)+6) = 1e-12;
+            % Assuming accelation white noise q = 1e-15
+            % Q_pos = q * 1/3*dt^3
+            % Q_vel = q * dt
+            % Converted to MEE
+            %             Qv(svs*(i-1)+1) = 4.5e-15;
+            %             Qv(svs*(i-1)+2) = 2.5e-23;
+            %             Qv(svs*(i-1)+3) = 2.5e-23;
+            %             Qv(svs*(i-1)+4) = 6.0e-24;
+            %             Qv(svs*(i-1)+5) = 6.0e-24;
+            %             Qv(svs*(i-1)+6) = 2.3e-23;
+            
+            % Process noise for orbital state in MEE for 1 hour converted to per second
+            % [Qp,Qf,Qg,Qh,Qk,QL]1hr =[1.5e-8,3.2e-13,3.2e-13,4.0e-14,4.0e-14,4.0e-14]
+            Qv(svs*(i-1)+1) = 1.5e-8  / 3600^3 * 3; %9.6451e-19
+            Qv(svs*(i-1)+2) = 3.2e-13 / 3600^3 * 3; %2.0576e-23
+            Qv(svs*(i-1)+3) = 3.2e-13 / 3600^3 * 3; %2.0576e-23
+            Qv(svs*(i-1)+4) = 4.0e-14 / 3600^3 * 3; %2.5720e-24
+            Qv(svs*(i-1)+5) = 4.0e-14 / 3600^3 * 3; %2.5720e-24
+            Qv(svs*(i-1)+6) = 4.0e-14 / 3600^3 * 3; %2.5720e-24
+            
+%             [cart,cartCov]=meeCov2cartCov(meeMeasTLE(1:6), diag([1.5e-8,3.2e-13,3.2e-13,4e-14,4e-14,4e-14])*24^3/3, GM_kms)
+%             sqrt(diag(cartCov))
+%             norm(ans(1:3))
         else
             % Initial variance for position and velocity
             ii = 6*(i-1)+1;
             jj = 6*(i-1)+6;
-            % Convert assumed MEE covariance to 
+            % Convert assumed MEE covariance to position and velocity
             [~,posVelCov] = meeCov2cartCov(meeMeasTLE(ii:jj,1), R_TLE(ii:jj,ii:jj), GM_kms);
             Pv(svs*(i-1)+1:svs*(i-1)+6) = diag(posVelCov);
             
@@ -300,7 +403,7 @@ try
         Pv(svs*(i-1)+7) = (x0g(svs*i) * 0.01)^2; % 1% BC 1-sigma error
         
         % Process noise for ballistic coefficient
-        Qv(svs*(i-1)+7) = 1e-16; % 1-sigma error: 1e-8 per 1 hour
+        Qv(svs*(i-1)+7) = 2.7e-20; % 1-sigma error: 1e-8 per 1 hour => cov: 1e-16/3600 = 2.7e-20 per second
     end
     
     % Initial variance for reduced-order density state
@@ -309,7 +412,7 @@ try
     
     % Process noise for reduced-order density state
     % Use variance of ROM model 1-hour prediction error w.r.t. the training data
-    Qv(end-r+1:end) = diag(Qrom);
+    Qv(end-r+1:end) = diag(Qrom) / 3600;
     
     % Initial state covariance and process noise matrices
     P = diag(Pv); % Convert to matrix with variances on the diagonal
@@ -336,7 +439,7 @@ try
     end
     
     % Run Unscented Kalman filter estimation
-%     [X_est,Pv] = UKF(X_est,Meas,time,stateFnc,measurementFcn,P,RM,Q);
+    %     [X_est,Pv] = UKF(X_est,Meas,time,stateFnc,measurementFcn,P,RM,Q);
     time = measEpochs - et0;
     % Always start at zero
     if time(1) ~= 0
@@ -344,7 +447,7 @@ try
         % Add dummy measurement at t0
         Meas = [zeros(size(Meas,1),1), Meas];
     end
-    [X_est,Pv] = UKFsingleMeasurements(X_est,Meas,time,stateFnc,state2measurementFcn,residualFcn,P,Rmeas,Q,useMEE);
+    [X_est,Pv,X_pred] = UKFsingleMeasurements_newProcessNoise(X_est,Meas,time,stateFnc,state2measurementFcn,residualFcn,P,Rmeas,Q,svs,r,useMEE);
     
     global resultsDirPath
     nowTimeStr = datestr(now,'yymmddHHMMSS');
@@ -355,7 +458,6 @@ try
     
     %% Plot results
     if plotFigures
-        
         
         % Plot estimated ROM modes and corresponding uncertainty
         ROMplot = figure;
@@ -421,35 +523,6 @@ try
         subplot(2,3,6); xlabel('Time [hours]'); ylabel('\sigma_L [rad]');
         savefig(meeCovPlot,[filenameBase 'MEEcov_' testCaseName nowTimeStr '.fig']);
         
-%         % Plot uncertainty in measurements: equinoctial orbital elements
-%         measCovPlot = figure;
-%         if useRangeRangeRate
-%             for i = 1:nop
-%                 objIndices = find(Meas(1,:)==i)-1;
-%                 for j=1:2
-%                     subplot(1,2,j); hold on;
-%                     plot(time(objIndices)/3600,reshape(Rmeas(j,j,objIndices),length(objIndices),1).^0.5);
-%                 end
-%             end
-%             subplot(1,2,1); xlabel('Time [hours]'); ylabel('\sigma_{range} [km]'); legend(objectIDlabels);
-%             subplot(1,2,2); xlabel('Time [hours]'); ylabel('\sigma_{rangerate} [km/s]');
-%         else
-%             for i = 1:nop
-%                 objIndices = find(Meas(1,:)==i)-1;
-%                 for j=1:6
-%                     subplot(2,3,j); hold on;
-%                     plot(time(objIndices)/3600,reshape(Rmeas(j,j,objIndices),length(objIndices),1).^0.5);
-%                 end
-%             end
-%             subplot(2,3,1); xlabel('Time [hours]'); ylabel('\sigma_p [km]'); legend(objectIDlabels);
-%             subplot(2,3,2); xlabel('Time [hours]'); ylabel('\sigma_f [-]');
-%             subplot(2,3,3); xlabel('Time [hours]'); ylabel('\sigma_g [-]');
-%             subplot(2,3,4); xlabel('Time [hours]'); ylabel('\sigma_h [-]');
-%             subplot(2,3,5); xlabel('Time [hours]'); ylabel('\sigma_k [-]');
-%             subplot(2,3,6); xlabel('Time [hours]'); ylabel('\sigma_L [rad]');
-%         end
-%         savefig(measCovPlot,[filenameBase 'measCov_' testCaseName nowTimeStr '.fig']);
-        
         if useRangeRangeRate
             % Plot position errors w.r.t. measurements
             rangeResidualPlot = figure;
@@ -462,29 +535,34 @@ try
             end
             for k = 1:nop
                 objIndices = find(Meas(1,:)==k);
-
-                rangeRangeRate_res = zeros(2,length(objIndices));
+                
+                rangeRangeRate_res_post = zeros(2,length(objIndices));
+                %                 rangeRangeRate_res_pre = zeros(2,length(objIndices));
                 for j=1:length(objIndices)
                     objI = objIndices(j);
                     
                     rangeRangeRate_est = extractSingleRangeRangeRate(X_est(:,objI),Meas(:,objI),svs,GM_kms);
-                    rangeRangeRate_res(:,j) = getResidualRangeRangeRate(rangeRangeRate_est,Meas(:,objI));
+                    rangeRangeRate_res_post(:,j) = getResidualRangeRangeRate(rangeRangeRate_est,Meas(:,objI));
+                    %                     rangeRangeRate_pred = extractSingleRangeRangeRate(X_pred(:,objI),Meas(:,objI),svs,GM_kms);
+                    %                     rangeRangeRate_res_pre(:,j) = getResidualRangeRangeRate(rangeRangeRate_pred,Meas(:,objI));
                 end
                 figure(rangeResidualPlot);
                 subplot(ax1(k))
-                plot(time(objIndices)/3600,rangeRangeRate_res(1,:)); hold on;
+                plot(time(objIndices)/3600,rangeRangeRate_res_post(1,:)); hold on;
+                %                 plot(time(objIndices)/3600,rangeRangeRate_res_pre(1,:)); hold on;
                 plot(time(objIndices)/3600,3*reshape(Rmeas(1,1,objIndices-1),length(objIndices),1).^0.5,'-','Color',[0.8 0.8 0.8]);
                 plot(time(objIndices)/3600,-3*reshape(Rmeas(1,1,objIndices-1),length(objIndices),1).^0.5,'-','Color',[0.8 0.8 0.8]);
                 xlabel('Time, hrs');ylabel('Range error [km]');
-                title(sprintf('Orbit %.0f, std= %.3f',objects(k).noradID,std(rangeRangeRate_res(1,:))));
+                title(sprintf('Orbit %.0f, std= %.3f',objects(k).noradID,std(rangeRangeRate_res_post(1,:))));
                 
                 figure(rangeRateResidualPlot);
                 subplot(ax2(k))
-                plot(time(objIndices)/3600,rangeRangeRate_res(2,:)); hold on;
+                plot(time(objIndices)/3600,rangeRangeRate_res_post(2,:)); hold on;
+                %                 plot(time(objIndices)/3600,rangeRangeRate_res_pre(2,:)); hold on;
                 plot(time(objIndices)/3600,3*reshape(Rmeas(2,2,objIndices-1),length(objIndices),1).^0.5,'-','Color',[0.8 0.8 0.8]);
                 plot(time(objIndices)/3600,-3*reshape(Rmeas(2,2,objIndices-1),length(objIndices),1).^0.5,'-','Color',[0.8 0.8 0.8]);
                 xlabel('Time, hrs');ylabel('Range rate error [km/s]');
-                title(sprintf('Orbit %.0f, std= %.4f',objects(k).noradID,std(rangeRangeRate_res(2,:))));
+                title(sprintf('Orbit %.0f, std= %.4f',objects(k).noradID,std(rangeRangeRate_res_post(2,:))));
             end
             savefig(rangeResidualPlot,[filenameBase 'rangeResiduals_' testCaseName nowTimeStr '.fig']);
             savefig(rangeRateResidualPlot,[filenameBase 'rangeRateResiduals_' testCaseName nowTimeStr '.fig']);
@@ -495,7 +573,7 @@ try
             posPlot = figure;
             for k = 1:nop
                 objIndices = find(Meas(1,:)==k);
-
+                
                 xx_pv_est = zeros(6,length(objIndices));
                 xx_pv_meas = zeros(6,length(objIndices));
                 for j=1:length(objIndices)
@@ -514,13 +592,13 @@ try
                 title(sprintf('Orbit %.0f, mean= %.2f',objects(k).noradID,mean(posErrors)));
             end
             savefig(posPlot,[filenameBase 'posErr_' testCaseName nowTimeStr '.fig']);
-
+            
             % Plot MEE errors w.r.t. measurements
             meePlot = figure;
             for k = 1:nop
                 objIndices = find(Meas(1,:)==k);
-                    xx_mee_est = X_est((k-1)*svs+1:(k-1)*svs+6,objIndices);
-                    xx_mee_meas = Meas(2:end,objIndices);
+                xx_mee_est = X_est((k-1)*svs+1:(k-1)*svs+6,objIndices);
+                xx_mee_meas = Meas(2:end,objIndices);
                 for j=1:5
                     subplot(2,3,j)
                     plot(time(objIndices)/3600,xx_mee_est(j,:)-xx_mee_meas(j,:)); hold on;
