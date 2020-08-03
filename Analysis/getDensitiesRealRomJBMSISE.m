@@ -5,6 +5,12 @@ if computeCov
     romCovs = varargin{1};
 end
 
+if nargin > 12
+    computeJBMS = varargin{2};
+else
+    computeJBMS = true;
+end
+
 n = length(data.longitudes);
 rho_rom = zeros(n,1);
 rho_sat = zeros(n,1);
@@ -29,7 +35,7 @@ for i=1:n
     
     lon = data.longitudes(i);
     slt = data.localtimes(i);
-    lat = data.latitudes(i);
+    lat = data.latitudes(i); % Geodetic
     alt = data.altitudes(i);
     
     if datetype == 1
@@ -50,7 +56,7 @@ for i=1:n
         dv = datevec(data.dates(i));
         et  = cspice_str2et(strcat([num2str([dv(1) dv(2) dv(3) dv(4) dv(5) dv(6)],'%d %d %d %d %d %.10f') 'UTC']));
     end
-        
+    
     
     % ROM density
     romState = interp1(etROM, romStates', et, 'linear','extrap');
@@ -65,32 +71,51 @@ for i=1:n
     if computeCov
         romCov = interp1(etROM, romCovs', et);
         Pyy = diag(UhI * diag(romCov) * UhI');
-%         rho_rom_std(i) = 100*Pyy.^0.5*log(10); % percentage std
         rho_rom_std(i) = Pyy.^0.5*log(10)*rho_rom(i); % true std
     end
     
     % Satellite real density
     rho_sat(i) = data.densities(i);
     
-    % JB2008 density
+    % Time
     jdatestrUTC    = cspice_et2utc( et, 'J', 12 );
     jdateUTC       = str2double(jdatestrUTC(4:end)); % Cut trailing 'JD ' off from string
     [yyUTC, mmUTC, ddUTC, hhUTC, mnmnUTC, ssUTC] = datevec(jdateUTC-1721058.5);
-    doyUTC = day(datetime(yyUTC, mmUTC, ddUTC),'dayofyear');
-    [MJD,GWRAS,SUN,F10,F10B,S10,S10B,XM10,XM10B,Y10,Y10B,DSTDTC] = computeJB2000SWinputs(yyUTC,doyUTC,hhUTC,mnmnUTC,ssUTC,SOLdata,DTCdata,eopdata);
     
-    XLON = deg2rad(lon); % Lon
-    SAT(1) = mod(GWRAS + XLON, 2*pi);
-    SAT(2) = deg2rad(lat); % Lat
-    SAT(3) = alt;
-    [~,rho_jb2(i)] = JB2008(MJD,SUN,SAT,F10,F10B,S10,S10B,XM10,XM10B,Y10,Y10B,DSTDTC);
+    if computeJBMS
+        % JB2008 density
+        doyUTC = day(datetime(yyUTC, mmUTC, ddUTC),'dayofyear');
+        [MJD,GWRAS,SUN,F10,F10B,S10,S10B,XM10,XM10B,Y10,Y10B,DSTDTC] = computeJB2000SWinputs(yyUTC,doyUTC,hhUTC,mnmnUTC,ssUTC,SOLdata,DTCdata,eopdata);
+        
+        % Convert geodetic to geocentic latitude
+        %     radii = cspice_bodvrd( 'EARTH', 'RADII', 3 );
+        %     flat = (radii(1) - radii(3))/radii(1);
+        %     x = cspice_georec( lon, lat, alt, radii(1), flat );
+        f=1/298.257;
+        req=6378.14;
+        x_ecef = cspice_georec( deg2rad(lon), deg2rad(lat), alt, req, f );
+        lat_geocentric = atan2(x_ecef(3),norm(x_ecef(1:2))); % Geocentric latitude [rad]
+        
+        XLON = deg2rad(lon); % Lon
+        SAT(1) = mod(GWRAS + XLON, 2*pi);
+        SAT(2) = lat_geocentric; % Lat
+        SAT(3) = alt;
+        [~,rho_jb2(i)] = JB2008(MJD,SUN,SAT,F10,F10B,S10,S10B,XM10,XM10B,Y10,Y10B,DSTDTC);
+        
+        % NRLMSISE-00 density
+        [ f107A, f107, ap ] = computeSWnrlmsise( SWmatDaily, [], jdateUTC );
+        UTsec = hhUTC*3600+mnmnUTC*60+ssUTC;
+        [output] = nrlmsise(alt,lat,lon,yyUTC,doyUTC,UTsec,slt,f107A,f107,ap);
+        rho_msise(i) = output.d(6);
     
-    % NRLMSISE-00 density
-    [ f107A, f107, ap ] = computeSWnrlmsise( SWmatDaily, [], jdateUTC );
-    UTsec = hhUTC*3600+mnmnUTC*60+ssUTC;
-    [output] = nrlmsise(alt,lat,lon,yyUTC,doyUTC,UTsec,slt,f107A,f107,ap);
-    rho_msise(i) = output.d(6);
-
+        % Space weather data
+        [ ~, f107, Kp ] = computeSWnrlmsise( SWmatDailyTIEGCM, [], jdateUTC, true );
+        SWdata(i,1) = F10;
+        SWdata(i,2) = DSTDTC;
+        SWdata(i,3) = f107;
+        SWdata(i,4) = Kp(2);
+    end
+    
     %     plotTime(i) = et;
     if datetype == 1
         plotTime(i) = data.doys(i) + data.seconds(i)/86400;
@@ -98,13 +123,6 @@ for i=1:n
         yearStartDateNum = datenum(yyUTC,1,1);
         plotTime(i) = data.dates(i) - yearStartDateNum + 1;
     end
-    
-    % Space weather data
-    [ ~, f107, Kp ] = computeSWnrlmsise( SWmatDailyTIEGCM, [], jdateUTC, true );
-    SWdata(i,1) = F10;
-    SWdata(i,2) = DSTDTC;
-    SWdata(i,3) = f107;
-    SWdata(i,4) = Kp(2);
 end
 
 if computeCov
