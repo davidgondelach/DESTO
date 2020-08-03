@@ -10,7 +10,7 @@ function [MJD,GWRAS,SUN,F10,F10B,S10,S10B,XM10,XM10B,Y10,Y10B,DSTDTC] = computeJ
 % Modified by: David Gondelach
 % Massachusetts Institute of Technology, Dept. of Aeronautics and Astronautics
 % email: davidgondelach@gmail.com
-% Jan 2020; Last revision: 31-Jan-2020
+% Jan 2020; Last revision: 03-Aug-2020
 
 
 %------------- BEGIN CODE --------------
@@ -20,7 +20,7 @@ MJD = Mjday(year,month,day,hour,minute,sec);
 
 % READ SOLAR INDICES
 % USE 1 DAY LAG FOR F10 AND S10 FOR JB2008
-JD = floor(MJD-1+2400000.5);
+JD = round(MJD+2400000.5-1); % 1 day lag (JD=MJD+2400000.5)
 i = find(JD==SOLdata(3,:),1,'first');
 SOL = SOLdata(:,i);
 F10 = SOL(4);
@@ -41,7 +41,6 @@ Y10B = SOL(11);
 % GEOMAGNETIC STORM DTC VALUE
 doy = finddays(year,month,day,hour,minute,sec);
 i = find(year==DTCdata(1,:) & floor(doy)==DTCdata(2,:),1,'first');
-DTC = DTCdata(:,i);
 ii = floor(hour)+3;
 DSTDTC1 = DTCdata(ii,i); %DTC(ii);
 if ii >=26 % if hour >= 23
@@ -49,7 +48,7 @@ if ii >=26 % if hour >= 23
 else
     DSTDTC2 = DTCdata(ii+1,i); % Take next hour same day
 end
-DSTDTC = interp1([0 3600],[DSTDTC1 DSTDTC2],[minute*60+sec]) + 0.5;
+DSTDTC = interp1([0 3600],[DSTDTC1 DSTDTC2],[minute*60+sec]);
 
 % CONVERT POINT OF INTEREST LOCATION (RADIANS AND KM)
 % CONVERT LONGITUDE TO RA
