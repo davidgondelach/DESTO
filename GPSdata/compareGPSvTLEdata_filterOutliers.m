@@ -52,7 +52,7 @@ planetSkysats(13).objectPlanetID = 's111';  planetSkysats(13).objectNORADID = 42
 planetSkysats(14).objectPlanetID = 's112';  planetSkysats(14).objectNORADID = 43797; % SKYSAT C12
 planetSkysats(15).objectPlanetID = 's113';  planetSkysats(15).objectNORADID = 43802; % SKYSAT C13
 
-for objNr = 2
+for objNr = 15:15
     %% Get TLE data
     filename = fullfile('TLEdata',[num2str(planetSkysats(objNr).objectNORADID),'.tle']);
     [objectTLEs] = getTLEs(filename);
@@ -65,53 +65,56 @@ for objNr = 2
     
     %% Get GPS data
     gpsDataPath = '/Users/davidgondelach/Documents/PostDoc/GPSdata';
-    for day = 1:30
+    month = 4;
+    for day = 18:18
         tic;
         disp(day);
         try
-        [gpsData,filepath] = getGPSdataFromJsonFile(gpsDataPath,planetSkysats(objNr).objectPlanetID,planetSkysats(objNr).objectNORADID,2020,5,day,2020,5,day);
-        
-        %%
-        diffEpochMinutes = zeros(1,length(gpsData));
-        diffR = zeros(1,length(gpsData));
-        jdatesGPS = zeros(1,length(gpsData));
-        rr_Diff_RTN = zeros(length(gpsData),3);
-        vv_Diff_RTN = zeros(length(gpsData),3);
-        for i=1:length(gpsData)
-            jdatestr    = cspice_et2utc( gpsData(i).tET, 'J', 12 );
-            jdate       = str2double(jdatestr(4:end)); % Cut leading 'JD ' off from string
+            [gpsData,filepath] = getGPSdataFromJsonFile(gpsDataPath,planetSkysats(objNr).objectPlanetID,planetSkysats(objNr).objectNORADID,2020,month,day,2020,month,day);
             
-            % Find nearest-newer TLE and get state in J2000
-            satrecIndex = find([objectTLEs.satrecs.jdsatepoch] >= jdate, 1, 'first');
-            diffEpochMinutes(i) = (jdate - objectTLEs.satrecs(satrecIndex).jdsatepoch) * 24*60;
-            [~, rr_TLE_TEME ,vv_TLE_TEME] = sgp4( objectTLEs.satrecs(satrecIndex), diffEpochMinutes(i) );
-            [rr_TLE_J2000, vv_TLE_J2000] = convertTEMEtoJ2000(rr_TLE_TEME', vv_TLE_TEME', jdate);
-            %     coeTLE(i,:) = pv2po(rr_TLE_J2000, vv_TLE_J2000, GM);
+            %%
+            diffEpochMinutes = zeros(1,length(gpsData));
+            diffR = zeros(1,length(gpsData));
+            jdatesGPS = zeros(1,length(gpsData));
+            rr_Diff_RTN = zeros(length(gpsData),3);
+            vv_Diff_RTN = zeros(length(gpsData),3);
+            for i=1:length(gpsData)
+                jdatestr    = cspice_et2utc( gpsData(i).tET, 'J', 12 );
+                jdate       = str2double(jdatestr(4:end)); % Cut leading 'JD ' off from string
+                
+                % Find nearest-newer TLE and get state in J2000
+                satrecIndex = find([objectTLEs.satrecs.jdsatepoch] >= jdate, 1, 'first');
+                diffEpochMinutes(i) = (jdate - objectTLEs.satrecs(satrecIndex).jdsatepoch) * 24*60;
+                [~, rr_TLE_TEME ,vv_TLE_TEME] = sgp4( objectTLEs.satrecs(satrecIndex), diffEpochMinutes(i) );
+                [rr_TLE_J2000, vv_TLE_J2000] = convertTEMEtoJ2000(rr_TLE_TEME', vv_TLE_TEME', jdate);
+                %     coeTLE(i,:) = pv2po(rr_TLE_J2000, vv_TLE_J2000, GM);
+                
+                rr_Diff = rr_TLE_J2000 - gpsData(i).xx_J2000(1:3);
+                vv_Diff = vv_TLE_J2000 - gpsData(i).xx_J2000(4:6);
+                
+                diffR(i) = norm(rr_Diff);
+                jdatesGPS(i) = jdate;
+                
+                [cart2rtnMatrix] = computeCart2RTNMatrix(gpsData(i).xx_J2000(1:3), gpsData(i).xx_J2000(4:6));
+                rr_Diff_RTN(i,:) = cart2rtnMatrix*rr_Diff;
+                vv_Diff_RTN(i,:) = cart2rtnMatrix*vv_Diff;
+            end
+            [UsedTLEs] = find([objectTLEs.satrecs.jdsatepoch] >= min(jdatesGPS) & [objectTLEs.satrecs.jdsatepoch] <= max(jdatesGPS));
             
-            rr_Diff = rr_TLE_J2000 - gpsData(i).xx_J2000(1:3);
-            vv_Diff = vv_TLE_J2000 - gpsData(i).xx_J2000(4:6);
+            goodOnes = diffR < 3 & abs(vv_Diff_RTN(:,2))' < 1e-3 & abs(vv_Diff_RTN(:,3))' < 1e-3;
+            gpsData = gpsData(goodOnes);
+            matFile = strcat(filepath(1:end-5),'.mat');
+
+            % SAVE FILTERED GPS DATA
+%             save(matFile,'gpsData');
             
-            diffR(i) = norm(rr_Diff);
-            jdatesGPS(i) = jdate;
+            jdatesGPS_full = [jdatesGPS_full,jdatesGPS];
+            rr_Diff_RTN_full = [rr_Diff_RTN_full;rr_Diff_RTN];
+            vv_Diff_RTN_full = [vv_Diff_RTN_full;vv_Diff_RTN];
+            goodOnes_full = [goodOnes_full,goodOnes];
+            UsedTLEs_full = [UsedTLEs_full,UsedTLEs];
+            toc
             
-            [cart2rtnMatrix] = computeCart2RTNMatrix(gpsData(i).xx_J2000(1:3), gpsData(i).xx_J2000(4:6));
-            rr_Diff_RTN(i,:) = cart2rtnMatrix*rr_Diff;
-            vv_Diff_RTN(i,:) = cart2rtnMatrix*vv_Diff;
-        end
-        [UsedTLEs] = find([objectTLEs.satrecs.jdsatepoch] >= min(jdatesGPS) & [objectTLEs.satrecs.jdsatepoch] <= max(jdatesGPS));
-        
-        goodOnes = diffR < 4 & abs(vv_Diff_RTN(:,2))' < 1e-3 & abs(vv_Diff_RTN(:,3))' < 1e-3;
-        gpsData = gpsData(goodOnes);
-        matFile = strcat(filepath(1:end-5),'.mat');
-        save(matFile,'gpsData');
-        
-        jdatesGPS_full = [jdatesGPS_full,jdatesGPS];
-        rr_Diff_RTN_full = [rr_Diff_RTN_full;rr_Diff_RTN];
-        vv_Diff_RTN_full = [vv_Diff_RTN_full;vv_Diff_RTN];
-        goodOnes_full = [goodOnes_full,goodOnes];
-        UsedTLEs_full = [UsedTLEs_full,UsedTLEs];
-        toc
-        
         catch
             disp('Error for day: ');
             disp(day);
@@ -138,7 +141,7 @@ for objNr = 2
     xlabel('Hours'); ylabel('Position error [km]');
     legend('Radial','Transverse','Normal'); legend('hide');
     title('Filtered');
-    savefig(posPlot,['GPSvTLE_pos_', num2str(planetSkysats(objNr).objectNORADID), '_', planetSkysats(objNr).objectPlanetID, '_2020May', '_filtered.fig']);
+%     savefig(posPlot,['GPSvTLE_pos_', num2str(planetSkysats(objNr).objectNORADID), '_', planetSkysats(objNr).objectPlanetID, '_2020May', '_filtered.fig']);
     
     velPlot = figure;
     subplot(2,1,1);
@@ -159,6 +162,6 @@ for objNr = 2
     xlabel('Hours'); ylabel('Position error [km]');
     legend('Radial','Transverse','Normal'); legend('hide');
     title('Filtered');
-    savefig(velPlot,['GPSvTLE_vel_', num2str(planetSkysats(objNr).objectNORADID), '_', planetSkysats(objNr).objectPlanetID, '_2020May', '_filtered.fig']);
+%     savefig(velPlot,['GPSvTLE_vel_', num2str(planetSkysats(objNr).objectNORADID), '_', planetSkysats(objNr).objectPlanetID, '_2020May', '_filtered.fig']);
     
 end
