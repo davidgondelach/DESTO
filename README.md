@@ -12,9 +12,9 @@ This code is licensed under the GNU General Public License version 3 - see the [
 
 
 ### Acknowledgments
-The contributions by Dr. Piyush M. Mehta in the design and implementation of the code are acknowledged.
+Initial versions of the code were based on work by Dr. Piyush M. Mehta, see https://doi.org/10.2514/1.G004793.
 
-The MATLAB code for Jacchia-Bowman 2008 model was developed by Meysam Mahooti (copyright 2018) and was downloaded from https://www.mathworks.com/matlabcentral/fileexchange/56163-jacchia-bowman-atmospheric-density-model (version 2.0.0.0).
+The MATLAB code for the Jacchia-Bowman 2008 model and solar radiation pressure and third-body perturbations was developed by Meysam Mahooti (copyright 2018) and was downloaded from https://www.mathworks.com/matlabcentral/fileexchange/56163-jacchia-bowman-atmospheric-density-model (version 2.0.0.0) and https://www.mathworks.com/matlabcentral/fileexchange/55167-high-precision-orbit-propagator (version 2.1.1.1).
 
 The MATLAB code for the SGP4 model and several time and reference frame routines was developed by David Vallado (and others) and was downloaded from https://celestrak.com/software/vallado-sw.php.
 
@@ -45,7 +45,7 @@ see https://doi.org/10.1029/2019SW002356 or https://arxiv.org/abs/1910.00695.
 
 
 ### Run instructions
-1. Open mainDensityEstimation.m
+1. Open mainDensityEstimation.m (TLE), mainDensityEstimationGPS.m (GPS), or mainDensityEstimationRadar.m (Radar).
 2. Specify the time window for density estimation by setting the start year, month and day and number of days
 3. (Optionally) select the reduced-order density model and the reduction order (default order: r=10)
 4. (Optionally) select the objects to use for density estimation
@@ -61,13 +61,13 @@ Download the following ephemeris files and put them in the Data folder:
 
 
 ### Technical notes
-This version of the toolbox does not include third-body and solar radiation pressure perturbations. The speed of the code has not been optimized; 10-day density estimation may required several hours of computation. The estimation can be speed up by reducing the degree of the gravity model (see mainDensityEstimation.m, line 79) at the cost of reduced density estimate accuracy.
+The speed of the code has not been optimized; 10-day density estimation may required several hours of computation. The estimation can be speed up by reducing the degree of the gravity model (see mainDensityEstimation.m, line 79) at the cost of reduced density estimate accuracy.
 
 MATLAB R2018b (Version 9.5) was used to develop the code.
 
 
 ### Version
-The latest version is this toolbox may be found on: https://github.com/davidgondelach/DensityEstimation
+The latest version is this toolbox may be found on: https://github.com/davidgondelach/DESTO
 
 
 David Gondelach, Aug 2020
