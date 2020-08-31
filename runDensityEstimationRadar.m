@@ -150,7 +150,8 @@ try
             subplot(2,3,3); plot([objects(i).satrecs.jdsatepoch]-jdate0TLEs,rad2deg([objects(i).satrecs.inclo]),'.'); hold on;
             subplot(2,3,4); plot([objects(i).satrecs.jdsatepoch]-jdate0TLEs,rad2deg([objects(i).satrecs.nodeo]),'.'); hold on;
             subplot(2,3,5); plot([objects(i).satrecs.jdsatepoch]-jdate0TLEs,rad2deg([objects(i).satrecs.argpo]),'.'); hold on;
-            subplot(2,3,6); plot([objects(i).satrecs.jdsatepoch]-jdate0TLEs,([objects(i).satrecs.bstar])/median([objects(i).satrecs.bstar]),'.-'); hold on;
+%             subplot(2,3,6); plot([objects(i).satrecs.jdsatepoch]-jdate0TLEs,([objects(i).satrecs.bstar])/median([objects(i).satrecs.bstar]),'.-'); hold on;
+            subplot(2,3,6); plot([objects(i).satrecs.jdsatepoch]-jdate0TLEs,([objects(i).satrecs.bstar]),'.-'); hold on;
         end
         subplot(2,3,1); xlabel('Days since t_0'); ylabel('a [Earth radii]');legend(objectIDlabels,'Location','northeast');
         subplot(2,3,2); xlabel('Days since t_0'); ylabel('e [-]');legend(objectIDlabels,'Location','northeast');
@@ -234,29 +235,29 @@ try
             % Outliers in range or range rate
             outlierIndices = objIndices(diffRangeOutlier|diffRangeRateOutlier);
             
-%             hours = ( measRangeRangeRate(1,objIndices) - et0 ) / 3600;
-%             errRange = squeeze( Rmeas(1,1,objIndices).^(0.5) );
-%             errRangeRate = squeeze( Rmeas(2,2,objIndices).^(0.5) );
-%             figure;
-%             subplot(2,1,1); hold on;
-%             scatter(hours,diffRange,10);
-%             plot(hours(diffRangeOutlier),diffRange(diffRangeOutlier),'r.');
-%             plot(hours(diffRangeRateOutlier),diffRange(diffRangeRateOutlier),'c.');
-%             plot(hours,3*errRange,'-','Color',[0.8 0.8 0.8]);
-%             plot(hours,-3*errRange,'-','Color',[0.8 0.8 0.8]);
-%             title(objectIDlabels(i));
-%             xlabel('Hours');
-%             ylabel('Range diff [km]');
-%             
-%             subplot(2,1,2); hold on;
-%             scatter(hours,diffRangeRate,10);
-%             plot(hours(diffRangeOutlier),diffRangeRate(diffRangeOutlier),'c.');
-%             plot(hours(diffRangeRateOutlier),diffRangeRate(diffRangeRateOutlier),'r.');
-%             plot(hours,3*errRangeRate,'-','Color',[0.8 0.8 0.8]);
-%             plot(hours,-3*errRangeRate,'-','Color',[0.8 0.8 0.8]);
-%             title('meas - TLE');
-%             xlabel('Hours');
-%             ylabel('Range rate diff [km/s]');
+            hours = ( measRangeRangeRate(1,objIndices) - et0 ) / 3600;
+            errRange = squeeze( Rmeas(1,1,objIndices).^(0.5) );
+            errRangeRate = squeeze( Rmeas(2,2,objIndices).^(0.5) );
+            figure;
+            subplot(2,1,1); hold on;
+            scatter(hours,diffRange,10);
+            plot(hours(diffRangeOutlier),diffRange(diffRangeOutlier),'r.');
+            plot(hours(diffRangeRateOutlier),diffRange(diffRangeRateOutlier),'c.');
+            plot(hours,3*errRange,'-','Color',[0.8 0.8 0.8]);
+            plot(hours,-3*errRange,'-','Color',[0.8 0.8 0.8]);
+            title(objectIDlabels(i));
+            xlabel('Hours');
+            ylabel('Range diff [km]');
+            
+            subplot(2,1,2); hold on;
+            scatter(hours,diffRangeRate,10);
+            plot(hours(diffRangeOutlier),diffRangeRate(diffRangeOutlier),'c.');
+            plot(hours(diffRangeRateOutlier),diffRangeRate(diffRangeRateOutlier),'r.');
+            plot(hours,3*errRangeRate,'-','Color',[0.8 0.8 0.8]);
+            plot(hours,-3*errRangeRate,'-','Color',[0.8 0.8 0.8]);
+            title('meas - TLE');
+            xlabel('Hours');
+            ylabel('Range rate diff [km/s]');
             
             % Remove outliers
             measRangeRangeRate(:,outlierIndices) =[];

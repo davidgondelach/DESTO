@@ -59,7 +59,7 @@ ROMmodel = 'JB2008_1999_2010';  % Name of reduced-order density model: JB2008_19
 r  = 10;                        % Reduced order
 
 % NORAD catalog IDs of objects used for estimation
-% Default: GPS: 14 Planet Skysats: [39418,41601,41771,41772,41773,41774,42987,42988,42989,42990,42991,42992,43797,43802]
+% Default: GPS: 15 Planet Skysats: [39418,40072,41601,41771,41772,41773,41774,42987,42988,42989,42990,42991,42992,43797,43802]
 % selectedObjects = [41771,41773,41774,42987,42988,42989,42990,42992,43797,43802]; % GPS: 10 Planet Skysats : May 1-30
 selectedObjects = [41771,41773,42987,42988,43802]; % GPS: 5 Planet Skysats : May 1-30
 

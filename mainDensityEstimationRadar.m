@@ -22,7 +22,7 @@
 %  Author: David Gondelach
 %  Massachusetts Institute of Technology, Dept. of Aeronautics and Astronautics
 %  email: davidgondelach@gmail.com
-%  Jan 2020; Last revision: 31-Jan-2020
+%  Jan 2020; Last revision: 31-Aug-2020
 %
 %  Reference:
 %  D.J. Gondelach and R. Linares, "Real-Time Thermospheric Density
@@ -62,6 +62,8 @@ r  = 10;                        % Reduced order
 % Default: Radar: 15 objects: [614;750;2016;2153;2389;2622;4221;6073;7337;8744;12138;12388;14483;20774;23278]
 % selectedObjects = [614;2153;2622;4221;12138]; % Radar: 5 objects
 selectedObjects = [614;2153;2389;2622;4221;7337;8744;12138;12388;14483;20774;23278]; % Radar: 12 objects
+selectedObjects = [614;2153;2389;2622;4221;7337;8744;12138;12388;14483;20774;23278; 22;932;1807;4382;41771;41772;41773;42989;43797]; % Radar: 21 objects
+
 selectedObjects = sortrows(selectedObjects);
 
 % Display date

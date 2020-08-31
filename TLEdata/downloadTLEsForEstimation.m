@@ -10,8 +10,11 @@ function [objects] = downloadTLEsForEstimation(username, password, startYear, st
 
 %------------- BEGIN CODE --------------
 
-curlCmd = 'curl -o TLEdata/estimationObjects.tle https://www.space-track.org/ajaxauth/login -d ';
-usernameCmd = strcat('"identity=',username);
+TLEfolder = 'TLEdata';
+TLEfile = 'estimationObjects.tle';
+
+curlCmd = ['curl -o ' TLEfolder '/' TLEfile ' https://www.space-track.org/ajaxauth/login -d '];
+usernameCmd = strcat(' "identity=',username);
 passwordCmd = strcat('&password=',password);
 tleQuery = '&query=https://www.space-track.org/basicspacedata/query/class/tle/';
 epochQuery = strcat('EPOCH/',int2str(startYear), '-', sprintf('%02d',startMonth), '-', sprintf('%02d',startDay), '--', sprintf('%02d',endYear), '-', sprintf('%02d',endMonth), '-', sprintf('%02d',endDay), '/');
@@ -30,7 +33,7 @@ orderingQuery = 'orderby/NORAD_CAT_ID%20asc/format/tle/"';
 TLEdwnlcmd = strcat(curlCmd, usernameCmd, passwordCmd, tleQuery, epochQuery, apogeeQuery, objectsQuery, orderingQuery);
 system(TLEdwnlcmd);
 
-filename = fullfile('TLEdata','estimationObjects.tle');
+filename = fullfile(TLEfolder,TLEfile);
 [objects] = getTLEs(filename);
 
 end

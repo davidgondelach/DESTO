@@ -31,7 +31,7 @@ for i=1:nofPoints
     Inputs(3,i) = UThrs; 
     Inputs(4,i) = f107Average; 
     Inputs(5,i) = f107Daily; 
-    Inputs(6:12,i) = ap'; % 7 ap indeces
+    Inputs(6:12,i) = ap'; % 7 ap indeces: Daily, Now:3hr:Now-9hr, mean(-12:-24h), mean(-24:-36h)
 end
 
 % Smooth space weather data

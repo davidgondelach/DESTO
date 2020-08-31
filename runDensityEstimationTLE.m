@@ -59,6 +59,12 @@ else
     plotFigures = false;
 end
 
+if nargin > 8
+    highFidelity = varargin{2};
+else
+    highFidelity = false;
+end
+
 try
     
     global mu  % Earth gravitational parameter according to SGP4 model [km^3 s^-2]
@@ -140,11 +146,13 @@ try
         figure;
         for i=1:nop
             subplot(2,3,1); plot([objects(i).satrecs.jdsatepoch]-jdate0TLEs,[objects(i).satrecs.a],'.'); hold on;
-            subplot(2,3,2); plot([objects(i).satrecs.jdsatepoch]-jdate0TLEs,[objects(i).satrecs.ecco],'.'); hold on;
+            subplot(2,3,2); plot([objects(i).satrecs.jdsatepoch]-jdate0TLEs,[objects(i).satrecs.a].*(1-[objects(i).satrecs.ecco]),'.'); hold on;
+%             subplot(2,3,2); plot([objects(i).satrecs.jdsatepoch]-jdate0TLEs,[objects(i).satrecs.ecco],'.'); hold on;
             subplot(2,3,3); plot([objects(i).satrecs.jdsatepoch]-jdate0TLEs,rad2deg([objects(i).satrecs.inclo]),'.'); hold on;
             subplot(2,3,4); plot([objects(i).satrecs.jdsatepoch]-jdate0TLEs,rad2deg([objects(i).satrecs.nodeo]),'.'); hold on;
             subplot(2,3,5); plot([objects(i).satrecs.jdsatepoch]-jdate0TLEs,rad2deg([objects(i).satrecs.argpo]),'.'); hold on;
-            subplot(2,3,6); plot([objects(i).satrecs.jdsatepoch]-jdate0TLEs,([objects(i).satrecs.bstar])/median([objects(i).satrecs.bstar]),'.-'); hold on;
+            %             subplot(2,3,6); plot([objects(i).satrecs.jdsatepoch]-jdate0TLEs,([objects(i).satrecs.bstar])/median([objects(i).satrecs.bstar]),'.-'); hold on;
+            subplot(2,3,6); plot([objects(i).satrecs.jdsatepoch]-jdate0TLEs,([objects(i).satrecs.bstar]),'.-'); hold on;
         end
         subplot(2,3,1); xlabel('Days since t_0'); ylabel('a [Earth radii]');legend(objectIDlabels,'Location','northeast');
         subplot(2,3,2); xlabel('Days since t_0'); ylabel('e [-]');legend(objectIDlabels,'Location','northeast');
@@ -263,19 +271,25 @@ try
     et0  = cspice_str2et(strcat([num2str(jed2date(jd0),'%d %d %d %d %d %.10f') 'UTC']));
     
     % Set state propagation and measurement functions
-    stateFnc = @(xx,t0,tf) propagateState_MeeBcRom(xx,t0,tf,AC,BC,SWinputs,r,nop,svs,F_U,M_U,maxAtmAlt,et0,jd0);
+    stateFnc = @(xx,t0,tf) propagateState_MeeBcRom(xx,t0,tf,AC,BC,SWinputs,r,nop,svs,F_U,M_U,maxAtmAlt,et0,jd0,highFidelity);
     measurementFcn = @(xx) fullmee2mee(xx,nop,svs); % Function to convert from state with MEE,BC,ROM to only MEE
     
     % Run Unscented Kalman filter estimation
     [X_est,Pv] = UKF(X_est,Meas,time,stateFnc,measurementFcn,P,RM,Q);
     Pv(:,1) = diag(P); % Add initial state variance to state variance history
     
+    %% Save and plot results
+    global resultsDirPath
+    nowTimeStr = datestr(now,'yymmddHHMMSS');
+    filenameBase = [resultsDirPath 'ukf_rom_tle_' ROMmodel '_'];
+    testCaseName = [sprintf('%04d',yr), sprintf('%02d',mth), sprintf('%02d',dy), '_', num2str(nofDays) 'd_', num2str(nop), 'obj_'];
+    save([filenameBase 'workspace_' testCaseName nowTimeStr]);
     
     %% Plot results
     if plotFigures
         
         % Plot estimated ROM modes and corresponding uncertainty
-        figure;
+        ROMplot = figure;
         for i = 1:r
             subplot(ceil(r/4),4,i)
             plot(time/3600,X_est(end-r+i,:),'Linewidth',1); hold on;
@@ -286,18 +300,20 @@ try
             axis tight;
             set(gca,'fontsize', 14);
         end
+        savefig(ROMplot,[filenameBase 'ROMmodes_' testCaseName nowTimeStr '.fig']);
         
         % Plot uncertainty in estimated ROM modes
-        figure;
+        ROMcovplot = figure;
         for i = 1:r
             subplot(ceil(r/4),4,i)
             plot(time/3600,3*Pv(end-r+i,:).^0.5,'k');
             xlabel('Time, hrs'); ylabel(['z_{' num2str(i) '} 3\sigma']);
             title(sprintf('Mode %.0f',i));
         end
+        savefig(ROMcovplot,[filenameBase 'ROMmodesCov_' testCaseName nowTimeStr '.fig']);
         
         % Plot estimated ballistic coefficients and corresponding uncertainty
-        figure;
+        BCplot2 = figure;
         for i = 1:nop
             subplot(ceil(nop/2),2,i)
             plot(time/3600,X_est(svs*i,:)/1000,'Linewidth',1); hold on;
@@ -308,18 +324,20 @@ try
             axis tight;
             set(gca,'fontsize', 14);
         end
+        savefig(BCplot2,[filenameBase 'BC_' testCaseName nowTimeStr '.fig']);
         
         % Plot uncertainty in estimated ballistic coefficients
-        figure;
+        BCcovplot = figure;
         for i = 1:nop
             subplot(ceil(nop/2),2,i)
             plot(time/3600,3*Pv(svs*i,:).^0.5./X_est(svs*i,:)*100,'k');
             xlabel('Time, hrs');ylabel('BC 3\sigma [%]');
             title(sprintf('Orbit %.0f, BC=%.2f',objects(i).noradID,X_est(svs*i,end)));
         end
+        savefig(BCcovplot,[filenameBase 'BCcov_' testCaseName nowTimeStr '.fig']);
         
         % Plot uncertainty in estimated equinoctial orbital elements
-        figure;
+        meeCovPlot = figure;
         for i = 1:nop
             for j=1:6
                 subplot(2,3,j); hold on;
@@ -332,9 +350,10 @@ try
         subplot(2,3,4); xlabel('Time [hours]'); ylabel('\sigma_h [-]');
         subplot(2,3,5); xlabel('Time [hours]'); ylabel('\sigma_k [-]');
         subplot(2,3,6); xlabel('Time [hours]'); ylabel('\sigma_L [rad]');
+        savefig(meeCovPlot,[filenameBase 'MEEcov_' testCaseName nowTimeStr '.fig']);
         
         % Plot position errors w.r.t. TLE measurements
-        figure;
+        posPlot = figure;
         for k = 1:nop
             xx_pv_est = zeros(6,size(X_est,2));
             xx_pv_meas = zeros(6,size(meeMeas,2));
@@ -352,6 +371,7 @@ try
             xlabel('Time, hrs');ylabel('Position error [km]');
             title(sprintf('Orbit %.0f, mean= %.2f',objects(k).noradID,mean(posErrors)));
         end
+        savefig(posPlot,[filenameBase 'posErr_' testCaseName nowTimeStr '.fig']);
         
         % Plot estimated density and uncertainty on local solar time v latitude grid
         slt_plot = 0:0.5:24;
@@ -363,7 +383,7 @@ try
         nofHeights = length(heights);
         
         % Plot estimated density
-        figure;
+        densPlot = figure;
         for i = 1:nofHeights
             height = heights(i);
             ALT = height*ones(size(SLT,1),size(SLT,2));
@@ -386,9 +406,10 @@ try
             if i == nofHeights; xlabel('Local solar time'); xticks([0 6 12 18 24]); end
             set(gca,'FontSize',14);
         end
+        savefig(densPlot,[filenameBase 'densAlt_' testCaseName nowTimeStr '.fig']);
         
         % Plot uncertainty in estimated density
-        figure;
+        densCovPlot = figure;
         set(gcf,'Color','w');
         for i = 1:nofHeights
             height = heights(i);
@@ -414,6 +435,7 @@ try
             if i == nofHeights; xlabel('Local solar time'); xticks([0 6 12 18 24]); end
             set(gca,'FontSize',14);
         end
+        savefig(densCovPlot,[filenameBase 'densCovAlt_' testCaseName nowTimeStr '.fig']);
         
     end
     
