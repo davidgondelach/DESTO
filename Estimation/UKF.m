@@ -33,11 +33,13 @@ SR_R = sqrt(RM); % measurement noise
 SR_Q = sqrt(Q); % process noise
 eta = sqrt(L+lam);
 
+useMEE = true;
+
 try
     
     m = size(Meas,2);
     for i = 1:m-1
-        
+        tic;
         fprintf('%.0f of %.0f \n',i,m-1)
         sigv = real([eta*S -eta*S]);
         xx = [X_est(:,i) sigv+kron(X_est(:,i),ones(1,2*L))];
@@ -52,40 +54,44 @@ try
         S_minus = cholupdate(S_minus,Wc(1)*(Xp(:,1)-X_est(:,i+1)))';
         
         % Measurement function
-        [Ym] = measurementFcn(Xp);
-        ym = Wm(1) * Ym(:,1) + Wm(2) * sum(Ym(:,2:end),2);
+        [Ym] = measurementFcn(Xp); % [nofMeas x nofSigma]
+        ym = Wm(1) * Ym(:,1) + Wm(2) * sum(Ym(:,2:end),2); % [nofMeas x 1]
         
-        DY = Ym(:,1)-ym;
-        DY(6:6:end) = wrapToPi(DY(6:6:end)); % Wrap difference in true longitude to [-pi,pi]
-        
-        DY2 = Ym(:,2:end)-kron(ym,ones(1,2*L));
-        DY2(6:6:end) = wrapToPi(DY2(6:6:end)); % Wrap difference in true longitude to [-pi,pi]
+        DY = Ym(:,1)-ym; % [nofMeas x 1]
+        DY2 = Ym(:,2:end)-kron(ym,ones(1,2*L)); % [nofMeas x nofSigma-1]
+        if useMEE
+            DY(6:6:end) = wrapToPi(DY(6:6:end)); % Wrap difference in true longitude to [-pi,pi]
+            DY2(6:6:end) = wrapToPi(DY2(6:6:end)); % Wrap difference in true longitude to [-pi,pi]
+        end
         
         % Measurement Update
-        [~,S_y] = qr([SR_Wc(2)*(DY2) SR_R]',0);
-        S_y = cholupdate(S_y,Wc(1)*DY)';
+        [~,S_y] = qr([SR_Wc(2)*(DY2) SR_R]',0); % [nofMeas x nofMeas]
+        S_y = cholupdate(S_y,Wc(1)*DY)'; % [nofMeas x nofMeas]
         
         % Calculate Pxy
-        Pxy0 = Wc(1)*(Xp(:,1)-X_est(:,i+1))*DY';
+        Pxy0 = Wc(1)*(Xp(:,1)-X_est(:,i+1))*DY'; % [nofStates x nofMeas]
         Pyymat = DY2;
-        Pmat = Xp(:,2:end)-kron(X_est(:,i+1),ones(1,2*L));
-        Pxy = Pxy0+Wc(2)*(Pmat*Pyymat');
+        Pmat = Xp(:,2:end)-kron(X_est(:,i+1),ones(1,2*L)); % [nofStates x nofSigma-1]
+        Pxy = Pxy0+Wc(2)*(Pmat*Pyymat'); % [nofStates x nofMeas]
         
-        yres = Meas(:,i+1)-ym;
-        yres(6:6:end) = wrapToPi(yres(6:6:end)); % Wrap difference in true longitude to [-pi,pi]
+        % Measurement residual
+        yres = Meas(:,i+1)-ym; % [nofMeas x 1]
+        if useMEE
+            yres(6:6:end) = wrapToPi(yres(6:6:end)); % Wrap difference in true longitude to [-pi,pi]
+        end
         
         % Gain and Update
-        KG = real(Pxy/S_y')/S_y;
+        KG = real(Pxy/S_y')/S_y; % [nofStates x nofMeas]
         X_est(:,i+1) = X_est(:,i+1) + KG * yres;
         U = KG * S_y;
-        S = S_minus;
+        S = S_minus; % [nofStates x nofStates]
         for j = 1:length(ym)
             S = cholupdate(S',U(:,j),'-')';
         end
         
         HH(:,:,i+1) = (pinv(S*S')*KG*RM)';
         Pv(:,i+1) = diag(S*S')';
-        
+        toc
     end
     
 catch errMsg
