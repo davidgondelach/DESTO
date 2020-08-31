@@ -29,25 +29,25 @@ errPlot = figure;
 plot(plotTime,rho_rom_absErr); hold on;
 plot(plotTime,rho_jb2_absErr); hold on;
 plot(plotTime,rho_msise_absErr); hold on;
-xlabel('Day of year'); ylabel('Error \rho [%]');  xlim([floor(plotTime(1)) ceil(plotTime(end))]); xticks([floor(plotTime(1)):1:ceil(plotTime(end))]);
+xlabel('Day of year'); ylabel('Error density [%]');  xlim([floor(plotTime(1)) ceil(plotTime(end))]); xticks([floor(plotTime(1)):1:ceil(plotTime(end))]);
 legend('ROM','JB2008','NRLMSISE-00');
 
 % avgErrPlot = plotOrbitAverage(latitudes,plotTime,rho_rom_absErr,rho_jb2_absErr);
-% xlabel('Day of year'); ylabel('Orbit-averaged error \rho [%]'); xlim([0 240]); xticks([0:24:240]);
+% xlabel('Day of year'); ylabel('Orbit-averaged error density [%]'); xlim([0 240]); xticks([0:24:240]);
 % legend('ROM','JB2008');
 
 % errPlot = figure;
 % plot(movmean(plotTime,100),movmean(rho_rom_absErr,100)); hold on;
 % plot(movmean(plotTime,100),movmean(rho_jb2_absErr,100)); hold on;
-% xlabel('Day of year'); ylabel('Moving average error \rho [kg/m^3]'); xlim([0 240]); xticks([0:24:240]);
+% xlabel('Day of year'); ylabel('Moving average error density [kg/m^3]'); xlim([0 240]); xticks([0:24:240]);
 % legend('ROM','JB2008');
 
 [avgErrPlot,orbitAvgRMSerr] = plotOrbitAveragedDensityError(latitudes,plotTime,rho_real,rho_rom,rho_jb2,rho_msise);
-xlabel('Day of year'); ylabel('Orbit-averaged \rho error [%]');  xlim([floor(plotTime(1)) ceil(plotTime(end))]); xticks([floor(plotTime(1)):1:ceil(plotTime(end))]);
+xlabel('Day of year'); ylabel('Orbit-averaged density error [%]');  xlim([floor(plotTime(1)) ceil(plotTime(end))]); xticks([floor(plotTime(1)):1:ceil(plotTime(end))]);
 legend('ROM','JB2008','NRLMSISE-00');
 
 avgDensPlot = plotOrbitAverage(latitudes,plotTime,rho_real,rho_rom,rho_jb2,rho_msise);
-xlabel('Day of year'); ylabel('Orbit-averaged \rho [kg/m^2]');  xlim([floor(plotTime(1)) ceil(plotTime(end))]); xticks([floor(plotTime(1)):1:ceil(plotTime(end))]);
+xlabel('Day of year'); ylabel('Orbit-averaged density [kg/m^3]');  xlim([floor(plotTime(1)) ceil(plotTime(end))]); xticks([floor(plotTime(1)):1:ceil(plotTime(end))]);
 legend(satName,'ROM','JB2008','NRLMSISE-00');
 
 [dailyAvgErrPlot,dailyAvgRMSerr] = plotDailyAveragedDensityError(plotTime,rho_real,rho_rom,rho_jb2,rho_msise);

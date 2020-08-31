@@ -195,7 +195,7 @@ save([filenameBase 'densityErrors.mat'],'orbitAvgErrChamp','dailyAvgErrChamp','o
 % plotOrbitAverage(champData.latitudes,time_champ,rho_champ_real,rho_champ_jb2);
 % plotOrbitAverage(champData.latitudes,time_champ,rho_champ_real,rho_champ_msise);
 % plotOrbitAverage(graceBData.latitudes,time_graceB,rho_graceB_real,rho_graceB_rom,rho_graceB_jb2,rho_graceB_msise);
-% xlabel('Day of year'); ylabel('Orbit-averaged \rho [kg/m^2]');  xlim([floor(plotTime(1)) ceil(plotTime(end))]); xticks([floor(plotTime(1)):1:ceil(plotTime(end))]);
+% xlabel('Day of year'); ylabel('Orbit-averaged \rho [kg/m^3]');  xlim([floor(plotTime(1)) ceil(plotTime(end))]); xticks([floor(plotTime(1)):1:ceil(plotTime(end))]);
 % legend(satName,'ROM','JB2008','NRLMSISE');
 
 for k = 1:nop

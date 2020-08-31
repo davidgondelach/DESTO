@@ -1,4 +1,4 @@
-clearvars
+clearvars -except localResultsDirPath
 set(0, 'DefaultLineLineWidth', 1);
 set(0,'defaultAxesFontSize',14);
 
@@ -13,9 +13,118 @@ set(0,'defaultAxesFontSize',14);
 % load(fullfile(localResultsDirPath,'ukf_rom_radar_JB2008_1999_2010_workspace_20200103_25d_5obj_200514221532.mat'));
 % localResultsDirPath = '/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/RadarObs/JB2008_1999_2010/leolabs_rangeRate_5obj_grav48x48_SRPSM';
 % load(fullfile(localResultsDirPath,'ukf_rom_radar_JB2008_1999_2010_workspace_20200103_25d_5obj_200515074634.mat'));
-localResultsDirPath = '/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/RadarObs/JB2008_1999_2010/leolabs_rangeRate_13obj_grav48x48_SRPSM';
-load(fullfile(localResultsDirPath,'ukf_rom_radar_JB2008_1999_2010_workspace_20200103_25d_13obj_200615112634'));
-% matfile = dir(fullfile(localResultsDirPath,'ukf_*.mat'));
+% localResultsDirPath = '/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/RadarObs/JB2008_1999_2010/leolabs_rangeRate_13obj_grav48x48_SRPSM';
+% load(fullfile(localResultsDirPath,'ukf_rom_radar_JB2008_1999_2010_workspace_20200103_25d_13obj_200615112634'));
+% localResultsDirPath = '/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/RadarObs/JB2008_1999_2010/leolabs_rangeRate_11obj_grav48x48_SRPSM_fastProp_without7337_23278';
+% load(fullfile(localResultsDirPath,'ukf_rom_radar_JB2008_1999_2010_workspace_20200103_25d_11obj_200621020933'));
+% localResultsDirPath = '/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/RadarObs/JB2008_1999_2010/leolabs_rangeRate_11obj_grav48x48_SRPSM_fastProp';
+% load(fullfile(localResultsDirPath,'ukf_rom_radar_JB2008_1999_2010_workspace_20200103_25d_11obj_200621014141'));
+% localResultsDirPath = '/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/RadarObs/JB2008_1999_2010/leolabs_rangeRate_11obj_grav48x48_SRPSM_noOutliers/';
+% load(fullfile(localResultsDirPath,'ukf_rom_radar_JB2008_1999_2010_workspace_20200103_25d_11obj_200623091517'));
+% localResultsDirPath = '/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/RadarObs/JB2008_1999_2010/leolabs_rangeRate_13obj_grav48x48_SRPSM_noOutliers/';
+% load(fullfile(localResultsDirPath,'ukf_rom_radar_JB2008_1999_2010_workspace_20200103_25d_13obj_200623210618'));
+% localResultsDirPath = '/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/RadarObs/JB2008_1999_2010/leolabs_rangeRate_9obj_grav48x48_SRPSM_fastProp/';
+% load(fullfile(localResultsDirPath,'ukf_rom_radar_JB2008_1999_2010_workspace_20200103_25d_9obj_200620105552'));
+% localResultsDirPath = '/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/JB2008_1999_2010 - 2002 - CHAMP GOCE/HighFidelityDynamics_1percBCstd/20200103_25d_5objects/';
+% load(fullfile(localResultsDirPath,'ukf_rom_tle_JB2008_1999_2010_workspace_20200103_25d_5obj_200625124925.mat'));
+% localResultsDirPath = '/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/JB2008_1999_2010 - 2002 - CHAMP GOCE/HighFidelityDynamics_1percBCstd/20200103_25d_11objects/';
+% load(fullfile(localResultsDirPath,'ukf_rom_tle_JB2008_1999_2010_workspace_20200103_25d_11obj_200626180841.mat'));
+% localResultsDirPath = '/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/RadarObs/JB2008_1999_2010/leolabs_rangeRate_11obj_grav48x48_SRPSM_noOutliers_higherRrateCov';
+% load(fullfile(localResultsDirPath,'ukf_rom_radar_JB2008_1999_2010_workspace_20200103_25d_11obj_200626151346.mat'));
+% localResultsDirPath = '/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/JB2008_1999_2010 - 2002 - CHAMP GOCE/HighFidelityDynamics_1percBCstd/20200103_25d_15objects/';
+% localResultsDirPath = '/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/JB2008_1999_2010 - 2002 - CHAMP GOCE/HighFidelityDynamics_1percBCstd/20200103_25d_13objects/';
+% localResultsDirPath = '/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/JB2008_1999_2010 - 2002 - CHAMP GOCE/HighFidelityDynamics_1percBCstd/20200103_25d_12objects';
+% localResultsDirPath = '/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/JB2008_1999_2010 - 2002 - CHAMP GOCE/HighFidelityDynamics_1percBCstd/20200103_10d_19obj_200811132033';
+% localResultsDirPath = '/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/JB2008_1999_2010 - 2002 - CHAMP GOCE/HighFidelityDynamics_1percBCstd/20200103_10d_21obj_200811123552';
+% localResultsDirPath = '/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/JB2008_1999_2010 - 2002 - CHAMP GOCE/HighFidelityDynamics_1percBCstd/20200103_10d_20obj_200812030557';
+localResultsDirPath = '/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/JB2008_1999_2010 - 2002 - CHAMP GOCE/HighFidelityDynamics_1percBCstd/20200103_10d_20obj_200812030557';
+% localResultsDirPath = '/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/RadarObs/JB2008_1999_2010/leolabs_rangeRate_5obj_grav48x48_SRPSM_noOutliers_higherProcessNoise/';
+% localResultsDirPath = '/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/RadarObs/JB2008_1999_2010/leolabs_rangeRate_5obj_grav48x48_SRPSM_noOutliers_higherProcessNoise2/';
+% localResultsDirPath = '/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/RadarObs/JB2008_1999_2010/leolabs_rangeRate_5obj_grav48x48_SRPSM_fastProp';
+% localResultsDirPath = '/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/RadarObs/JB2008_1999_2010/leolabs_rangeRate_13obj_grav48x48_SRPSM_noOutliers_higherProcessNoise';
+% localResultsDirPath = '/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/RadarObs/JB2008_1999_2010/leolabs_rangeRate_13obj_grav48x48_SRPSM_noOutliers_higherProcessNoise2';
+% localResultsDirPath = '/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/RadarObs/JB2008_1999_2010/leolabs_rangeRate_5diffObj_grav48x48_SRPSM_noOutliers_higherProcessNoise2';
+% localResultsDirPath = '/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/RadarObs/JB2008_1999_2010/New Folder With Items';
+% localResultsDirPath = '/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/RadarObs/JB2008_1999_2010/New Folder With Items 3';
+% localResultsDirPath = '/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/RadarObs/JB2008_1999_2010/New Folder With Items 3';
+% localResultsDirPath = '/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/RadarObs/JB2008_1999_2010/leolabs_rangeRate_5obj_grav48x48_SRPSM_filteredAllOutliers_newProcessNoise';
+% localResultsDirPath = '/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/RadarObs/JB2008_1999_2010/leolabs_rangeRate_7obj_grav48x48_SRPSM_filteredAllOutliers_newProcessNoise_1rangeErr_2rangeRateErr';
+% localResultsDirPath = '/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/RadarObs/JB2008_1999_2010/leolabs_rangeRate_5obj_grav48x48_SRPSM_filteredAllOutliers_newProcessNoise_1rangeErr_2rangeRateErr';
+% localResultsDirPath = '/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/RadarObs/JB2008_1999_2010/leolabs_rangeRate_11obj_grav48x48_SRPSM_filteredAllOutliers_newProcessNoise_1rangeErr_2rangeRateErr';
+% localResultsDirPath = '/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/RadarObs/JB2008_1999_2010/leolabs_rangeRate_6obj_grav48x48_SRPSM_filteredAllOutliers_newProcessNoise_1rangeErr_2rangeRateErr';
+% localResultsDirPath = '/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/GPSmeas/LatestRun/';
+% matfile = dir('/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/GPSmeas/LatestRun/ukf_rom_gps_NRLMSISE_1997_2008_workspace_20200501_10d_5obj_200718030237.mat');
+% matfile = dir('/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/GPSmeas/LatestRun/ukf_rom_gps_NRLMSISE_1997_2008_workspace_20200501_10d_5obj_200718032244.mat');
+% matfile = dir('/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/GPSmeas/LatestRun/20200501_10d_5obj_200718033540 GPS5m BC2%/ukf_rom_gps_NRLMSISE_1997_2008_workspace_20200501_10d_5obj_200718033540.mat');
+% matfile = dir('/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/GPSmeas/LatestRun/ukf_rom_gps_NRLMSISE_1997_2008_workspace_20200511_10d_5obj_200718023911.mat');
+% matfile = dir('/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/GPSmeas/LatestRun/ukf_rom_gps_NRLMSISE_1997_2008_workspace_20200521_10d_5obj_200718024833.mat');
+% matfile = dir('/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/GPSmeas/LatestRun/ukf_rom_gps_JB2008_1999_2010_workspace_20200511_10d_5obj_200718052227.mat');
+% matfile = dir('/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/GPSmeas/LatestRun/20200521_10d_5obj_200718031730/ukf_rom_gps_NRLMSISE_1997_2008_workspace_20200521_10d_5obj_200718031730.mat');
+% localResultsDirPath = '/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/GPSmeas/20200501_10d_5obj_200718070647 5m BC10%';
+
+
+% localResultsDirPath = ['/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/RadarObs/JB2008_1999_2010/' ...
+%     'leolabs_rangeRate_21obj_grav48x48_SRPSM_movingWindowFilter_newProcessNoise_1rErr_2rrErr'];
+%     'leolabs_rangeRate_20obj_grav48x48_SRPSM_movingWindowFilter_newProcessNoise_1rErr_2rrErr'];
+%     'leolabs_rangeRate_21obj_grav48x48_SRPSM_movingWindowFilter_newProcessNoise_1rErr_2rrErr_full'];
+%     'leolabs_rangeRate_19obj_grav48x48_SRPSM_movingWindowFilter_newProcessNoise_1rErr_2rrErr'];
+% 'leolabs_rangeRate_12obj_grav48x48_SRPSM_movingWindowFilter_newProcessNoise_1rErr_2rrErr_higherRomCov'];
+%     'leolabs_rangeRate_12obj_grav48x48_SRPSM_movingWindowFilter_newProcessNoise_1rErr_2rrErr'];
+% localResultsDirPath = ['/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/RadarObs/' ...
+%     'leolabs_rangeRate_12obj_originalRRunc'];
+%     'leolabs_rangeRate_12obj_noRRfilter'];
+%     'leolabs_rangeRate_12obj_lowerProcessNoise2'];
+%     'leolabs_rangeRate_12obj_lowerProcessNoise'];
+%     'leolabs_rangeRate_12obj_originalRRunc'];
+
+% localResultsDirPath = ['/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/GPSmeas/' ...
+%     'MS 20200417_7d_10obj_200814110127 newBC r20'];
+%     'JB 20200417_7d_10obj_200814102740 newBC r20'];
+%     'JB 20200501_10d_10obj_200723130615 newBC copy'];
+%         'JB 20200417_9d_10obj_200806191915 newBC'];
+%     'JB 20200417_7d_10obj_200805060725 newBC'];
+%     'MS 20200417_7d_10obj_200805063551 newBC'];
+%     'MS 20200501_30d_5obj_200801083746 oldBC'];
+%     'JB 20200501_30d_5obj_200731200414 oldBC'];
+%     'MS 20200417_10d_5obj_200730200620 newBC'];
+%     'JB 20200501_30d_5obj_200723090440 newBC'];
+%     'JB 20200501_6d_5obj_200729212329 oldBC 2%'];
+%     'TLE JB 20200501_20d_10obj_200721032448 newBC'];
+%     'MS 20200501_10d_10obj_200723124907 newBC'];
+%     'JB 20200501_10d_10obj_200723130615 newBC'];
+%     'MS 20200501_30d_5obj_200726164049 newBC'];
+%     'JB 20200501_10d_5obj_200725090243 BC20%'];
+%     'MS 20200501_10d_5obj_200725213121 BC20%'];
+%     'TLE JB 20200416_11d_5obj_200725085922 newBC'];
+%     'JB 20200417_10d_5obj_200725233051 newBC 2'];
+%     'JB 20200417_10d_5obj_200725223433 newBC 1'];
+%     'JB_20200511_10d_5obj_200718052227 5m BC10%'];
+%     'JB 20200416_11d_5obj_200722051654 newBC'];
+%     'MS 20200501_10d_10obj_200723124907 newBC'];
+%     'JB 20200501_30d_5obj_200723090440 newBC'];
+%     'TLE JB 20200501_20d_5obj_200720183745 newBC'];
+%     'TLE JB 20200501_20d_15obj_200721200454 newBC'];
+%     'MS 20200521_10d_5obj_200720141733 newBC'];
+%     'JB 20200521_10d_5obj_200720135513 newBC'];
+%     'MS 20200511_10d_5obj_200720134754 newBC'];
+%     'JB 20200511_10d_5obj_200720125420 newBC'];
+%     'MS 20200501_10d_5obj_200720121759 newBC'];
+% 'JB 20200501_10d_5obj_200720134352 newBC'];
+%     'MS_20200501_10d_5obj_200718033540 GPS5m BC2%'];
+%     'MS_20200521_10d_5obj_200718024833 GPS5m'];
+% 'MS_20200521_10d_5obj_200718070144 5m BC2%'];
+% 'JB_20200501_10d_5obj_200718070647 5m BC10%'];
+
+% 'MS_20200501_10d_5obj_200718122323 5m BC10%'];
+% 'MS_20200511_10d_5obj_200718135226 5m BC10%'];
+% 'MS_20200511_10d_5obj_200718071120 2m BC10%'];
+% 'MS_20200511_10d_5obj_200718071840 5m BC2%'];
+
+% matfiles = dir(fullfile(localResultsDirPath,'ukf_*.mat'));
+% load(fullfile(matfiles.folder,matfiles.name));
+
+matfiles = dir(fullfile(localResultsDirPath,'ukf_*.mat'));
+load(fullfile(matfiles(1).folder,matfiles(1).name));
 
 addpath('AstroFunctions');
 addpath('/Users/davidgondelach/Dropbox (MIT)/Research-ROM/code/sqrt-ukf-rom-gps-2019/nrlmsise_matlab');
@@ -26,6 +135,7 @@ addpath( fullfile(spicePath,'src','mice') );
 addpath( fullfile(spicePath,'lib') );
 
 %%
+computeJBMS = true;
 SAVE_PLOTS = true;
 DO_PREDICTION = false;
 
@@ -56,6 +166,9 @@ swarmPath = '/Users/davidgondelach/Documents/PostDoc/SWARMdata/';
 nameSWARM_A = 'A';
 nameSWARM_B = 'B';
 nameSWARM_C = 'C';
+nameSWARM_A_full = 'SWARM A';
+nameSWARM_B_full = 'SWARM B';
+nameSWARM_C_full = 'SWARM C';
 % SWARMdensityData = cdfread('/Users/davidgondelach/Downloads/SW_OPER_DNSAPOD_2__20200101T000000_20200101T235930_0201/SW_OPER_DNSAPOD_2__20200101T000000_20200101T235930_0201.cdf')
 
 
@@ -68,12 +181,12 @@ SWpath = fullfile('Data','SW-All.txt');
 [ SWmatDailyTIEGCM, ~ ] = inputSWtiegcm( SWpath );
 
 %% Date
-yearStart = yr;
-monthStart = mth;
-dayStart = dy;
-yearEnd = yr;
-monthEnd = mth;
-dayEnd = dayStart+nofDays-1;
+% yearStart = yr;
+% monthStart = mth;
+% dayStart = dy;
+% yearEnd = yr;
+% monthEnd = mth;
+% dayEnd = dayStart+nofDays-1;
 
 % nofDays = 10;
 % yearStart = 2002;
@@ -91,7 +204,6 @@ dayEnd = dayStart+nofDays-1;
 % monthEnd = 11;
 % dayEnd = dayStart+nofDays;
 
-filenameBase = [localResultsDirPath ,'/', ROMmodel, '_', sprintf('%04d',yearStart), sprintf('%02d',monthStart), sprintf('%02d',dayStart), '_', num2str(nofDays), 'd_' ];
 % filenameBase = [localResultsDirPath ,'/', ROMmodel, '_', sprintf('%04d',yearStart), sprintf('%02d',monthStart), sprintf('%02d',dayStart), '_', num2str(nofDays), 'd_', nowTimeStr, '_'];
 
 %% Load satellite data
@@ -103,68 +215,225 @@ filenameBase = [localResultsDirPath ,'/', ROMmodel, '_', sprintf('%04d',yearStar
 % [champData] = getChampGraceData_Mehta(champPath_Mehta,champFilename_Mehta,yearStart,monthStart,dayStart,yearEnd,monthEnd,dayEnd);
 % [graceAData] = getChampGraceData_Mehta(graceAPath_Mehta,graceAFilename_Mehta,yearStart,monthStart,dayStart,yearEnd,monthEnd,dayEnd);
 
-% SWARM data
-[swarmAData] = getSwarmData(swarmPath,nameSWARM_A,yearStart,monthStart,dayStart,yearEnd,monthEnd,dayEnd);
 
 %% Estimated ROM state and covariance
-etukf = et0 + time;
+% notSameEpoch = [diff(time)~=0 true];
+% et_est = et0 + time(notSameEpoch);
+% romState_est = X_est(end-r+1:end,notSameEpoch);
+% romCov_est = Pv(end-r+1:end,notSameEpoch);
+% BC_est = X_est(svs:svs:end-r,notSameEpoch);
+
+%% Date
+yearStart = yr;
+monthStart = mth;
+dayStart = dy;
+
+%% Estimated ROM state and covariance
+et_est = et0 + reshape(time,[1,length(time)]);
 romState_est = X_est(end-r+1:end,:);
 romCov_est = Pv(end-r+1:end,:);
 BC_est = X_est(svs:svs:end-r,:);
 
+for i=2:length(matfiles)
+    load(fullfile(matfiles(i).folder,matfiles(i).name));
+    
+    %% Estimated ROM state and covariance
+    et_est_next = et0 + reshape(time,[1,length(time)]);
+    
+%     [~,index] = min(abs(et_est_next - et_est(end)));
+    [index] = find(et_est_next > et_est(end),1)
+    
+    romState_est_next = X_est(end-r+1:end,index+1:end);
+    romCov_est_next = Pv(end-r+1:end,index+1:end);
+    BC_est_next = X_est(svs:svs:end-r,index+1:end);
+    
+    et_est = [et_est, et_est_next(index+1:end)];
+    romState_est = [romState_est, romState_est_next];
+    romCov_est = [romCov_est, romCov_est_next];
+    BC_est = [BC_est, BC_est_next];
+end
+
+notSameEpoch = [diff(et_est)~=0 , true];
+et_est = et_est(notSameEpoch);
+romState_est = romState_est(:,notSameEpoch);
+romCov_est = romCov_est(:,notSameEpoch);
+BC_est = BC_est(:,notSameEpoch);
+
+%% Load SWARM density data
+% % See: https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/cspice/timout_c.html
+% pic = 'DD-Mon-YYYY HR:MN:SC.##### ::RND'; % 'DD-Mon-YYYY HR:MN:SC.##### ::RND'
+% 
+% % Start date
+% date0str = cspice_timout( et_est(1), pic );
+% dateStart = datetime(date0str);
+% yearStart = dateStart.Year;
+% monthStart = dateStart.Month;
+% dayStart = dateStart.Day;
+% 
+% % End date
+% datefstr = cspice_timout( et_est(end), pic );
+% dateEnd = datetime(datefstr);
+% yearEnd = dateEnd.Year;
+% monthEnd = dateEnd.Month;
+% dayEnd = dateEnd.Day;
+
+%% Date
+yearEnd = yr;
+monthEnd = mth;
+dayEnd = dy+nofDays-1;
+
+% SWARM data
+[swarmAData] = getSwarmData(swarmPath,nameSWARM_A,yearStart,monthStart,dayStart,yearEnd,monthEnd,dayEnd);
+[swarmBData] = getSwarmData(swarmPath,nameSWARM_B,yearStart,monthStart,dayStart,yearEnd,monthEnd,dayEnd);
+% [swarmCData] = getSwarmData(swarmPath,nameSWARM_C,yearStart,monthStart,dayStart,yearEnd,monthEnd,dayEnd);
+
+%%
+filenameBase = [localResultsDirPath ,'/', ROMmodel, '_', sprintf('%04d',yearStart), sprintf('%02d',monthStart), sprintf('%02d',dayStart), '_', num2str(nofDays), 'd_' ];
+
+% %%
+% nominalBC = 0.01376;
+% yearStartDateNum = datenum(yearStart,1,1);
+% plotTime = swarmAData.dates - yearStartDateNum + 1;
+% [xxx,yyy] = plotDailyAveragedDensityError((et_est-et_est(1))/86400,nominalBC*ones(1,size(BC_est,2)),mean(BC_est)/1000);
+
+%%
 BCestPlot = figure;
 for i=1:size(BC_est,1)
-plot((etukf-etukf(1))/86400,BC_est(i,:)/median(BC_est(i,:))); hold on;
+plot((et_est-et_est(1))/86400,BC_est(i,:)/median(BC_est(i,:))); hold on;
+% plot((et_est-et_est(1))/86400,BC_est(i,:)/1000); hold on;
+% plot((et_est-et_est(1))/86400+122,(BC_est(i,:)/1000 - nominalBC)./nominalBC*100); hold on;
 end
 legend(objectIDlabels,'Location','northeast');
 xlabel('Day of year'); ylabel('BCest / medianBCest');
-savefig(BCestPlot,[filenameBase 'BCest.fig']);
+if SAVE_PLOTS
+    savefig(BCestPlot,[filenameBase 'BCest.fig']);
+end
 
-%% CHAMP
-[time_champ,rho_champ_real,rho_champ_rom,rho_champ_jb2,rho_champ_msise,SWdata,rho_champ_rom_std] = getDensitiesRealRomJBMSISE(swarmAData,etukf,romState_est,r,F_U,M_U,SOLdata,DTCdata,eopdata,SWmatDaily,SWmatDailyTIEGCM,romCov_est);
-[orbitAvgErrChamp,dailyAvgErrChamp] = plotDensityComparison(time_champ,rho_champ_real,rho_champ_rom,rho_champ_jb2,rho_champ_msise,rho_champ_rom_std,swarmAData.latitudes,nameSWARM_A,SAVE_PLOTS,filenameBase);
+%% Swarm A
+goodDensities = swarmAData.densities < 1e-5;
+swarmAData.longitudes = swarmAData.longitudes(goodDensities);
+swarmAData.latitudes = swarmAData.latitudes(goodDensities);
+swarmAData.altitudes = swarmAData.altitudes(goodDensities);
+swarmAData.densities = swarmAData.densities(goodDensities);
+swarmAData.localtimes = swarmAData.localtimes(goodDensities);
+swarmAData.dates = swarmAData.dates(goodDensities);
+[time_swarmA,rho_swarmA_real,rho_swarmA_rom,rho_swarmA_jb2,rho_swarmA_msise,SWdata_swarmA,rho_swarmA_rom_std] = getDensitiesRealRomJBMSISE(swarmAData,et_est,romState_est,r,F_U,M_U,SOLdata,DTCdata,eopdata,SWmatDaily,SWmatDailyTIEGCM,romCov_est,computeJBMS);
+[orbitAvgErrChamp,dailyAvgErrChamp] = plotDensityComparison(time_swarmA,rho_swarmA_real,rho_swarmA_rom,rho_swarmA_jb2,rho_swarmA_msise,rho_swarmA_rom_std,swarmAData.latitudes,nameSWARM_A_full,SAVE_PLOTS,filenameBase);
 
-meanStdErrData(1,1) = mean(orbitAvgErrChamp(3,:)); % MS
-meanStdErrData(2,1) = mean(orbitAvgErrChamp(2,:)); % JB
-meanStdErrData(3,1) = mean(orbitAvgErrChamp(1,:)); % ROM
-meanStdErrData(1,2) = std(orbitAvgErrChamp(3,:)); % MS
-meanStdErrData(2,2) = std(orbitAvgErrChamp(2,:)); % JB
-meanStdErrData(3,2) = std(orbitAvgErrChamp(1,:)); % ROM
-meanStdErrData(1,3) = mean(dailyAvgErrChamp(3,:)); % MS
-meanStdErrData(2,3) = mean(dailyAvgErrChamp(2,:)); % JB
-meanStdErrData(3,3) = mean(dailyAvgErrChamp(1,:)); % ROM
-meanStdErrData(1,4) = std(dailyAvgErrChamp(3,:)); % MS
-meanStdErrData(2,4) = std(dailyAvgErrChamp(2,:)); % JB
-meanStdErrData(3,4) = std(dailyAvgErrChamp(1,:)); % ROM
+meanStdRmsErrData(1,1) = mean(orbitAvgErrChamp(3,:)); % MS
+meanStdRmsErrData(2,1) = mean(orbitAvgErrChamp(2,:)); % JB
+meanStdRmsErrData(3,1) = mean(orbitAvgErrChamp(1,:)); % ROM
+meanStdRmsErrData(1,2) = std(orbitAvgErrChamp(3,:)); % MS
+meanStdRmsErrData(2,2) = std(orbitAvgErrChamp(2,:)); % JB
+meanStdRmsErrData(3,2) = std(orbitAvgErrChamp(1,:)); % ROM
+meanStdRmsErrData(1,3) = rms(orbitAvgErrChamp(3,:)); % MS
+meanStdRmsErrData(2,3) = rms(orbitAvgErrChamp(2,:)); % JB
+meanStdRmsErrData(3,3) = rms(orbitAvgErrChamp(1,:)); % ROM
+meanStdRmsErrData(1,4) = mean(dailyAvgErrChamp(3,:)); % MS
+meanStdRmsErrData(2,4) = mean(dailyAvgErrChamp(2,:)); % JB
+meanStdRmsErrData(3,4) = mean(dailyAvgErrChamp(1,:)); % ROM
+meanStdRmsErrData(1,5) = std(dailyAvgErrChamp(3,:)); % MS
+meanStdRmsErrData(2,5) = std(dailyAvgErrChamp(2,:)); % JB
+meanStdRmsErrData(3,5) = std(dailyAvgErrChamp(1,:)); % ROM
+meanStdRmsErrData(1,6) = rms(dailyAvgErrChamp(3,:)); % MS
+meanStdRmsErrData(2,6) = rms(dailyAvgErrChamp(2,:)); % JB
+meanStdRmsErrData(3,6) = rms(dailyAvgErrChamp(1,:)); % ROM
 
-rmsErrChamp_rom = rms((rho_champ_real-rho_champ_rom)./rho_champ_real*100);
-rmsErrChamp_jb2 = rms((rho_champ_real-rho_champ_jb2)./rho_champ_real*100);
-rmsErrChamp_msise = rms((rho_champ_real-rho_champ_msise)./rho_champ_real*100);
 
-% plotTime_champ = (time_champ-time_champ(1))/86400;
-plotTime_champ = time_champ;
+rmsErrChamp_rom = rms((rho_swarmA_real-rho_swarmA_rom)./rho_swarmA_real*100);
+rmsErrChamp_jb2 = rms((rho_swarmA_real-rho_swarmA_jb2)./rho_swarmA_real*100);
+rmsErrChamp_msise = rms((rho_swarmA_real-rho_swarmA_msise)./rho_swarmA_real*100);
+
+plotTime_champ = time_swarmA;
 F10DSTplot = figure;
-yyaxis left; plot(plotTime_champ,SWdata(:,3)); ylabel('F10.7');
-yyaxis right; plot(plotTime_champ,SWdata(:,4)); ylabel('Kp');
+yyaxis left; plot(plotTime_champ,SWdata_swarmA(:,3)); ylabel('F10.7');
+yyaxis right; plot(plotTime_champ,SWdata_swarmA(:,4)); ylabel('Kp');
 xlabel('Day of year');  xlim([floor(plotTime_champ(1)) ceil(plotTime_champ(end))]);  xticks([floor(plotTime_champ(1)):5:ceil(plotTime_champ(end))]);
 savefig(F10DSTplot,[filenameBase 'F10_Kp.fig']);
+
+
+%% Swarm B
+goodDensities_B = swarmBData.densities < 1e-5;
+swarmBData.longitudes = swarmBData.longitudes(goodDensities_B);
+swarmBData.latitudes = swarmBData.latitudes(goodDensities_B);
+swarmBData.altitudes = swarmBData.altitudes(goodDensities_B);
+swarmBData.densities = swarmBData.densities(goodDensities_B);
+swarmBData.localtimes = swarmBData.localtimes(goodDensities_B);
+swarmBData.dates = swarmBData.dates(goodDensities_B);
+[time_swarmB,rho_swarmB_real,rho_swarmB_rom,rho_swarmB_jb2,rho_swarmB_msise,SWdata_swarmB,rho_swarmB_rom_std] = getDensitiesRealRomJBMSISE(swarmBData,et_est,romState_est,r,F_U,M_U,SOLdata,DTCdata,eopdata,SWmatDaily,SWmatDailyTIEGCM,romCov_est,computeJBMS);
+[orbitAvgErrSwarmB,dailyAvgErrSwarmB] = plotDensityComparison(time_swarmB,rho_swarmB_real,rho_swarmB_rom,rho_swarmB_jb2,rho_swarmB_msise,rho_swarmB_rom_std,swarmBData.latitudes,nameSWARM_B_full,SAVE_PLOTS,filenameBase);
+
+meanStdRmsErrData(4,1) = mean(orbitAvgErrSwarmB(3,:)); % MS
+meanStdRmsErrData(5,1) = mean(orbitAvgErrSwarmB(2,:)); % JB
+meanStdRmsErrData(6,1) = mean(orbitAvgErrSwarmB(1,:)); % ROM
+meanStdRmsErrData(4,2) = std(orbitAvgErrSwarmB(3,:)); % MS
+meanStdRmsErrData(5,2) = std(orbitAvgErrSwarmB(2,:)); % JB
+meanStdRmsErrData(6,2) = std(orbitAvgErrSwarmB(1,:)); % ROM
+meanStdRmsErrData(4,3) = rms(orbitAvgErrSwarmB(3,:)); % MS
+meanStdRmsErrData(5,3) = rms(orbitAvgErrSwarmB(2,:)); % JB
+meanStdRmsErrData(6,3) = rms(orbitAvgErrSwarmB(1,:)); % ROM
+meanStdRmsErrData(4,4) = mean(dailyAvgErrSwarmB(3,:)); % MS
+meanStdRmsErrData(5,4) = mean(dailyAvgErrSwarmB(2,:)); % JB
+meanStdRmsErrData(6,4) = mean(dailyAvgErrSwarmB(1,:)); % ROM
+meanStdRmsErrData(4,5) = std(dailyAvgErrSwarmB(3,:)); % MS
+meanStdRmsErrData(5,5) = std(dailyAvgErrSwarmB(2,:)); % JB
+meanStdRmsErrData(6,5) = std(dailyAvgErrSwarmB(1,:)); % ROM
+meanStdRmsErrData(4,6) = rms(dailyAvgErrSwarmB(3,:)); % MS
+meanStdRmsErrData(5,6) = rms(dailyAvgErrSwarmB(2,:)); % JB
+meanStdRmsErrData(6,6) = rms(dailyAvgErrSwarmB(1,:)); % ROM
+
+save([filenameBase 'meanStdRmsErrData.mat'],'meanStdRmsErrData');
+save([filenameBase 'densities.mat'],'time_swarmA','rho_swarmA_real','rho_swarmA_rom','rho_swarmA_jb2','rho_swarmA_msise','SWdata_swarmA','rho_swarmA_rom_std', ...
+                                    'time_swarmB','rho_swarmB_real','rho_swarmB_rom','rho_swarmB_jb2','rho_swarmB_msise','SWdata_swarmB','rho_swarmB_rom_std');
+
+return;
+
+%% Swarm C
+goodDensities_C = swarmCData.densities < 1e-5;
+swarmCData.longitudes = swarmCData.longitudes(goodDensities_C);
+swarmCData.latitudes = swarmCData.latitudes(goodDensities_C);
+swarmCData.altitudes = swarmCData.altitudes(goodDensities_C);
+swarmCData.densities = swarmCData.densities(goodDensities_C);
+swarmCData.localtimes = swarmCData.localtimes(goodDensities_C);
+swarmCData.dates = swarmCData.dates(goodDensities_C);
+[time_swarmC,rho_swarmC_real,rho_swarmC_rom,rho_swarmC_jb2,rho_swarmC_msise,SWdata,rho_swarmC_rom_std] = getDensitiesRealRomJBMSISE(swarmCData,etukf,romState_est,r,F_U,M_U,SOLdata,DTCdata,eopdata,SWmatDaily,SWmatDailyTIEGCM,romCov_est);
+[orbitAvgErrSwarmC,dailyAvgErrSwarmC] = plotDensityComparison(time_swarmC,rho_swarmC_real,rho_swarmC_rom,rho_swarmC_jb2,rho_swarmC_msise,rho_swarmC_rom_std,swarmCData.latitudes,nameSWARM_C_full,SAVE_PLOTS,filenameBase);
+
+meanStdRmsErrData(7,1) = mean(orbitAvgErrSwarmC(3,:)); % MS
+meanStdRmsErrData(8,1) = mean(orbitAvgErrSwarmC(2,:)); % JB
+meanStdRmsErrData(9,1) = mean(orbitAvgErrSwarmC(1,:)); % ROM
+meanStdRmsErrData(7,2) = std(orbitAvgErrSwarmC(3,:)); % MS
+meanStdRmsErrData(8,2) = std(orbitAvgErrSwarmC(2,:)); % JB
+meanStdRmsErrData(9,2) = std(orbitAvgErrSwarmC(1,:)); % ROM
+meanStdRmsErrData(7,3) = rms(orbitAvgErrSwarmC(3,:)); % MS
+meanStdRmsErrData(8,3) = rms(orbitAvgErrSwarmC(2,:)); % JB
+meanStdRmsErrData(9,3) = rms(orbitAvgErrSwarmC(1,:)); % ROM
+meanStdRmsErrData(7,4) = mean(dailyAvgErrSwarmC(3,:)); % MS
+meanStdRmsErrData(8,4) = mean(dailyAvgErrSwarmC(2,:)); % JB
+meanStdRmsErrData(9,4) = mean(dailyAvgErrSwarmC(1,:)); % ROM
+meanStdRmsErrData(7,5) = std(dailyAvgErrSwarmC(3,:)); % MS
+meanStdRmsErrData(8,5) = std(dailyAvgErrSwarmC(2,:)); % JB
+meanStdRmsErrData(9,5) = std(dailyAvgErrSwarmC(1,:)); % ROM
+meanStdRmsErrData(7,6) = rms(dailyAvgErrSwarmC(3,:)); % MS
+meanStdRmsErrData(8,6) = rms(dailyAvgErrSwarmC(2,:)); % JB
+meanStdRmsErrData(9,6) = rms(dailyAvgErrSwarmC(1,:)); % ROM
 
 %% GRACE-A
 [time_graceA,rho_graceA_real,rho_graceA_rom,rho_graceA_jb2,rho_graceA_msise,~,rho_graceA_rom_std] = getDensitiesRealRomJBMSISE(graceAData,etukf,romState_est,r,F_U,M_U,SOLdata,DTCdata,eopdata,SWmatDaily,SWmatDailyTIEGCM,romCov_est);
 [orbitAvgErrGraceA,dailyAvgErrGraceA] = plotDensityComparison(time_graceA,rho_graceA_real,rho_graceA_rom,rho_graceA_jb2,rho_graceA_msise,rho_graceA_rom_std,graceAData.latitudes,nameGRACEA,SAVE_PLOTS,filenameBase);
 
-meanStdErrData(4,1) = mean(orbitAvgErrGraceA(3,:)); % MS
-meanStdErrData(5,1) = mean(orbitAvgErrGraceA(2,:)); % JB
-meanStdErrData(6,1) = mean(orbitAvgErrGraceA(1,:)); % ROM
-meanStdErrData(4,2) = std(orbitAvgErrGraceA(3,:)); % MS
-meanStdErrData(5,2) = std(orbitAvgErrGraceA(2,:)); % JB
-meanStdErrData(6,2) = std(orbitAvgErrGraceA(1,:)); % ROM
-meanStdErrData(4,3) = mean(dailyAvgErrGraceA(3,:)); % MS
-meanStdErrData(5,3) = mean(dailyAvgErrGraceA(2,:)); % JB
-meanStdErrData(6,3) = mean(dailyAvgErrGraceA(1,:)); % ROM
-meanStdErrData(4,4) = std(dailyAvgErrGraceA(3,:)); % MS
-meanStdErrData(5,4) = std(dailyAvgErrGraceA(2,:)); % JB
-meanStdErrData(6,4) = std(dailyAvgErrGraceA(1,:)); % ROM
+meanStdRmsErrData(4,1) = mean(orbitAvgErrGraceA(3,:)); % MS
+meanStdRmsErrData(5,1) = mean(orbitAvgErrGraceA(2,:)); % JB
+meanStdRmsErrData(6,1) = mean(orbitAvgErrGraceA(1,:)); % ROM
+meanStdRmsErrData(4,2) = std(orbitAvgErrGraceA(3,:)); % MS
+meanStdRmsErrData(5,2) = std(orbitAvgErrGraceA(2,:)); % JB
+meanStdRmsErrData(6,2) = std(orbitAvgErrGraceA(1,:)); % ROM
+meanStdRmsErrData(4,3) = mean(dailyAvgErrGraceA(3,:)); % MS
+meanStdRmsErrData(5,3) = mean(dailyAvgErrGraceA(2,:)); % JB
+meanStdRmsErrData(6,3) = mean(dailyAvgErrGraceA(1,:)); % ROM
+meanStdRmsErrData(4,4) = std(dailyAvgErrGraceA(3,:)); % MS
+meanStdRmsErrData(5,4) = std(dailyAvgErrGraceA(2,:)); % JB
+meanStdRmsErrData(6,4) = std(dailyAvgErrGraceA(1,:)); % ROM
 
 rmsErrGraceA_rom = rms((rho_graceA_real-rho_graceA_rom)./rho_graceA_real*100);
 rmsErrGraceA_jb2 = rms((rho_graceA_real-rho_graceA_jb2)./rho_graceA_real*100);
@@ -174,18 +443,18 @@ rmsErrGraceA_msise = rms((rho_graceA_real-rho_graceA_msise)./rho_graceA_real*100
 [time_graceB,rho_graceB_real,rho_graceB_rom,rho_graceB_jb2,rho_graceB_msise,~,rho_graceB_rom_std] = getDensitiesRealRomJBMSISE(graceBData,etukf,romState_est,r,F_U,M_U,SOLdata,DTCdata,eopdata,SWmatDaily,SWmatDailyTIEGCM,romCov_est);
 [orbitAvgErrGraceB,dailyAvgErrGraceB] = plotDensityComparison(time_graceB,rho_graceB_real,rho_graceB_rom,rho_graceB_jb2,rho_graceB_msise,rho_graceB_rom_std,graceBData.latitudes,nameGRACEB,SAVE_PLOTS,filenameBase);
 
-meanStdErrData(7,1) = mean(orbitAvgErrGraceB(3,:)); % MS
-meanStdErrData(8,1) = mean(orbitAvgErrGraceB(2,:)); % JB
-meanStdErrData(9,1) = mean(orbitAvgErrGraceB(1,:)); % ROM
-meanStdErrData(7,2) = std(orbitAvgErrGraceB(3,:)); % MS
-meanStdErrData(8,2) = std(orbitAvgErrGraceB(2,:)); % JB
-meanStdErrData(9,2) = std(orbitAvgErrGraceB(1,:)); % ROM
-meanStdErrData(7,3) = mean(dailyAvgErrGraceB(3,:)); % MS
-meanStdErrData(8,3) = mean(dailyAvgErrGraceB(2,:)); % JB
-meanStdErrData(9,3) = mean(dailyAvgErrGraceB(1,:)); % ROM
-meanStdErrData(7,4) = std(dailyAvgErrGraceB(3,:)); % MS
-meanStdErrData(8,4) = std(dailyAvgErrGraceB(2,:)); % JB
-meanStdErrData(9,4) = std(dailyAvgErrGraceB(1,:)); % ROM
+meanStdRmsErrData(7,1) = mean(orbitAvgErrGraceB(3,:)); % MS
+meanStdRmsErrData(8,1) = mean(orbitAvgErrGraceB(2,:)); % JB
+meanStdRmsErrData(9,1) = mean(orbitAvgErrGraceB(1,:)); % ROM
+meanStdRmsErrData(7,2) = std(orbitAvgErrGraceB(3,:)); % MS
+meanStdRmsErrData(8,2) = std(orbitAvgErrGraceB(2,:)); % JB
+meanStdRmsErrData(9,2) = std(orbitAvgErrGraceB(1,:)); % ROM
+meanStdRmsErrData(7,3) = mean(dailyAvgErrGraceB(3,:)); % MS
+meanStdRmsErrData(8,3) = mean(dailyAvgErrGraceB(2,:)); % JB
+meanStdRmsErrData(9,3) = mean(dailyAvgErrGraceB(1,:)); % ROM
+meanStdRmsErrData(7,4) = std(dailyAvgErrGraceB(3,:)); % MS
+meanStdRmsErrData(8,4) = std(dailyAvgErrGraceB(2,:)); % JB
+meanStdRmsErrData(9,4) = std(dailyAvgErrGraceB(1,:)); % ROM
 
 rmsErrGraceB_rom = rms((rho_graceB_real-rho_graceB_rom)./rho_graceB_real*100);
 rmsErrGraceB_jb2 = rms((rho_graceB_real-rho_graceB_jb2)./rho_graceB_real*100);
@@ -216,7 +485,7 @@ save([filenameBase 'densityErrors.mat'],'orbitAvgErrChamp','dailyAvgErrChamp','o
 % plotOrbitAverage(champData.latitudes,time_champ,rho_champ_real,rho_champ_jb2);
 % plotOrbitAverage(champData.latitudes,time_champ,rho_champ_real,rho_champ_msise);
 % plotOrbitAverage(graceBData.latitudes,time_graceB,rho_graceB_real,rho_graceB_rom,rho_graceB_jb2,rho_graceB_msise);
-% xlabel('Day of year'); ylabel('Orbit-averaged \rho [kg/m^2]');  xlim([floor(plotTime(1)) ceil(plotTime(end))]); xticks([floor(plotTime(1)):1:ceil(plotTime(end))]);
+% xlabel('Day of year'); ylabel('Orbit-averaged \rho [kg/m^3]');  xlim([floor(plotTime(1)) ceil(plotTime(end))]); xticks([floor(plotTime(1)):1:ceil(plotTime(end))]);
 % legend(satName,'ROM','JB2008','NRLMSISE');
 
 for k = 1:nop
