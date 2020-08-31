@@ -1,12 +1,10 @@
 # DensityEstimation
-Matlab code for global thermospheric density estimation using two-line element data.
+Matlab code for global thermospheric density estimation using: 1) radar range and range-rate measurements, 2) GPS position measurements or 3) two-line element data.
 
-This is a complete toolbox for Matlab that enables you to estimate the global thermospheric density using two-line element data. Three different reduced-order density models can be employed for the estimation. Details of the technique and models can be found in the journal paper, see https://doi.org/10.1029/2019SW002356 or https://arxiv.org/abs/1910.00695.
+This is a complete toolbox for Matlab that enables you to estimate the global thermospheric density using radar, GPS or two-line-element data. Three different reduced-order density models can be employed for the estimation. Details of the technique and models can be found in the journal paper, see https://doi.org/10.1029/2019SW002356 or https://arxiv.org/abs/1910.00695.
 
 
 Copyright © 2020 by David Gondelach and Richard Linares
-
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3634245.svg)](https://doi.org/10.5281/zenodo.3634245)
 
 
 ### License
@@ -22,7 +20,7 @@ The MATLAB code for the SGP4 model and several time and reference frame routines
 
 
 ### References
-The density modeling and estimation techniques are described in:
+The density modeling and estimation techniques using two-line element data are described in:
 ```
 @article{gondelach2019realtime,
   author = {Gondelach, David J. and Linares, Richard},
@@ -72,5 +70,5 @@ MATLAB R2018b (Version 9.5) was used to develop the code.
 The latest version is this toolbox may be found on: https://github.com/davidgondelach/DensityEstimation
 
 
-David Gondelach, Jan 2020
+David Gondelach, Aug 2020
 email: davidgondelach@gmail.com
