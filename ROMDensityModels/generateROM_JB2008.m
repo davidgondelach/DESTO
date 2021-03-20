@@ -2,6 +2,8 @@ function [PhiC,Uh,Qrom] = generateROM_JB2008(TA,r)
 %generateROM_JB2008 - Compute reduced-order dynamic density model based on 
 % JB2008 density data
 %
+%  Copyright (C) 2021 by David Gondelach
+%
 % This code is licensed under the GNU General Public License version 3.
 %
 % Author: David Gondelach

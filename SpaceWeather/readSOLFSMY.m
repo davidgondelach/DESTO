@@ -9,6 +9,8 @@ function SOLFSMY = readSOLFSMY(filename, startRow, endRow)
 % Example:
 %   SOLFSMY = readSOLFSMY('SOLFSMY.txt', 1, 7913);
 %
+% Copyright (C) 2021 by David Gondelach
+%
 
 
 %% Initialize variables.

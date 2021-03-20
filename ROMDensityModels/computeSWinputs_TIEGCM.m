@@ -1,6 +1,8 @@
 function [Inputs] = computeSWinputs_TIEGCM(jd0,jdf,SWmatDailyTIEGCM, SWmatMonthlyPredTIEGCM)
 %computeSWinputs_NRLMSISE - Compute space weather inputs for ROM-TIEGCM model
 %
+%  Copyright (C) 2021 by David Gondelach
+%
 % This code is licensed under the GNU General Public License version 3.
 %
 % Author: David Gondelach

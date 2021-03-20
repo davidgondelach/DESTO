@@ -1,6 +1,8 @@
 function [Inputs] = computeSWinputs_NRLMSISE(jd0,jdf,SWmatDaily,SWmatMonthlyPred)
 %computeSWinputs_NRLMSISE - Compute space weather inputs for ROM-NRLMSISE model
 %
+%  Copyright (C) 2021 by David Gondelach
+%
 % This code is licensed under the GNU General Public License version 3.
 %
 % Author: David Gondelach

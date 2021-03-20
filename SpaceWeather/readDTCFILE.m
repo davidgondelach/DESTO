@@ -9,6 +9,8 @@ function DTCFILE = readDTCFILE(filename, startRow, endRow)
 % Example:
 %   DTCFILE = readDTCFILE('DTCFILE.txt', 1, 7912);
 %
+%  Copyright (C) 2021 by David Gondelach
+%
 
 %% Initialize variables.
 if nargin<=2

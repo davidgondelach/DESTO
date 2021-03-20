@@ -4,7 +4,7 @@
 %                                                                           %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-%     Copyright (C) 2020 by David Gondelach
+%     Copyright (C) 2021 by David Gondelach
 % 
 %     This program is free software: you can redistribute it and/or modify
 %     it under the terms of the GNU General Public License as published by
@@ -22,12 +22,12 @@
 %  Author: David Gondelach
 %  Massachusetts Institute of Technology, Dept. of Aeronautics and Astronautics
 %  email: davidgondelach@gmail.com
-%  Jan 2020; Last revision: 31-Jan-2020
+%  Jan 2020; Last revision: 01-Mar-2021
 %
 %  Reference:
-%  D.J. Gondelach and R. Linares, "Real-Time Thermospheric Density
-%  Estimation Via Two-Line-Element Data Assimilation", Space Weather, 2020
-%  https://doi.org/10.1029/2019SW002356 or https://arxiv.org/abs/1910.00695
+%  D.J. Gondelach and R. Linares, "Real‐Time Thermospheric Density 
+%  Estimation Via Radar And GPS Tracking Data Assimilation", Space Weather, 2021
+%  https://doi.org/10.1029/2020SW002620
 % 
 
 
@@ -49,7 +49,7 @@ dy      = 1;    % Day
 hr      = 0;
 mn      = 0;
 sec     = 0;
-nofDays = 1;   % Number of days
+nofDays = 30;   % Number of days
 
 % Use high fidelity dynamical model
 highFidelity = true;
@@ -59,7 +59,6 @@ ROMmodel = 'JB2008_1999_2010';  % Name of reduced-order density model: JB2008_19
 r  = 10;                        % Reduced order
 
 % NORAD catalog IDs of objects used for estimation
-% Default: GPS: 15 Planet Skysats: [39418,40072,41601,41771,41772,41773,41774,42987,42988,42989,42990,42991,42992,43797,43802]
 % selectedObjects = [41771,41773,41774,42987,42988,42989,42990,42992,43797,43802]; % GPS: 10 Planet Skysats : May 1-30
 selectedObjects = [41771,41773,42987,42988,43802]; % GPS: 5 Planet Skysats : May 1-30
 
@@ -70,11 +69,10 @@ datetime(yr,mth,dy)
 
 %% SET PATHS
 % *** SPECIFY YOUR SPICE TOOLBOX DIRECTORY HERE! ***
-% spicePath = fullfile('[SPICE TOOLKIT DIRECTORY]','mice'); 
-spicePath = fullfile('/Users/davidgondelach/Documents','mice'); 
+spicePath = fullfile('[SPICE TOOLKIT DIRECTORY]','mice'); 
 global resultsDirPath gpsDataPath
-resultsDirPath = ['/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/GPSmeas/',ROMmodel,'/'];
-gpsDataPath = '/Users/davidgondelach/Documents/PostDoc/GPSdata';
+resultsDirPath = fullfile('[RESULTS DIRECTORY]');
+gpsDataPath = fullfile('[GPS DATA DIRECTORY]');
 
 addpath( 'AstroFunctions' );
 addpath( 'Estimation' );

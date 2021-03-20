@@ -4,7 +4,7 @@ Matlab code for global thermospheric density estimation using: 1) radar range an
 This is a complete toolbox for Matlab that enables you to estimate the global thermospheric density using radar, GPS or two-line-element data. Three different reduced-order density models can be employed for the estimation. 
 
 
-Copyright © 2020 by David Gondelach and Richard Linares
+Copyright © 2021 by David Gondelach and Richard Linares
 
 
 ### License

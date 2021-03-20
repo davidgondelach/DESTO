@@ -2,6 +2,8 @@ function [eopdata,SOLdata,DTCdata] = loadJB2008SWdata()
 % LOADJB2008SWDATA - Read space weather data and Earth orientation 
 % parameters needed for JB2008 density model from file
 %
+%  Copyright (C) 2021 by David Gondelach
+%
 % Author: David Gondelach
 % Massachusetts Institute of Technology, Dept. of Aeronautics and Astronautics
 % email: davidgondelach@gmail.com

@@ -1,6 +1,8 @@
 function [AC,BC,Uh,F_U,Dens_Mean,M_U,SLTm,LATm,ALTm,maxAtmAlt,SWinputs,Qrom] = generateROMdensityModel(ROMmodel,r,jd0,jdf)
 %generateROMdensityModel - Generate reduced-order density model
 %
+%  Copyright (C) 2021 by David Gondelach
+%
 % This code is licensed under the GNU General Public License version 3.
 %
 % Author: David Gondelach

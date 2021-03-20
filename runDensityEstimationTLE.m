@@ -24,7 +24,7 @@ function runDensityEstimationTLE(yr,mth,dy,nofDays,ROMmodel,r,selectedObjects,va
 %     plotFigures       - boolean: if true then plot results
 %
 % 
-%     Copyright (C) 2020 by David Gondelach
+%     Copyright (C) 2021 by David Gondelach
 % 
 %     This program is free software: you can redistribute it and/or modify
 %     it under the terms of the GNU General Public License as published by

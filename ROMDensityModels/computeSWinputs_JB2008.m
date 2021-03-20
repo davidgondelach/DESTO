@@ -1,6 +1,8 @@
 function [Inputs] = computeSWinputs_JB2008(jd0,jdf,eopdata,SOLdata,DTCdata)
 %computeSWinputs_JB2008 - Compute space weather inputs for ROM-JB2008 model
 %
+%  Copyright (C) 2021 by David Gondelach
+%
 % This code is licensed under the GNU General Public License version 3.
 %
 % Author: David Gondelach

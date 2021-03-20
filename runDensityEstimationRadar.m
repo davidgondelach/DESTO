@@ -24,7 +24,7 @@ function runDensityEstimationRadar(yr,mth,dy,hr,mn,sc,nofDays,ROMmodel,r,selecte
 %     plotFigures       - boolean: if true then plot results
 %
 %
-%     Copyright (C) 2020 by David Gondelach
+%     Copyright (C) 2021 by David Gondelach
 %
 %     This program is free software: you can redistribute it and/or modify
 %     it under the terms of the GNU General Public License as published by
@@ -150,7 +150,6 @@ try
             subplot(2,3,3); plot([objects(i).satrecs.jdsatepoch]-jdate0TLEs,rad2deg([objects(i).satrecs.inclo]),'.'); hold on;
             subplot(2,3,4); plot([objects(i).satrecs.jdsatepoch]-jdate0TLEs,rad2deg([objects(i).satrecs.nodeo]),'.'); hold on;
             subplot(2,3,5); plot([objects(i).satrecs.jdsatepoch]-jdate0TLEs,rad2deg([objects(i).satrecs.argpo]),'.'); hold on;
-%             subplot(2,3,6); plot([objects(i).satrecs.jdsatepoch]-jdate0TLEs,([objects(i).satrecs.bstar])/median([objects(i).satrecs.bstar]),'.-'); hold on;
             subplot(2,3,6); plot([objects(i).satrecs.jdsatepoch]-jdate0TLEs,([objects(i).satrecs.bstar]),'.-'); hold on;
         end
         subplot(2,3,1); xlabel('Days since t_0'); ylabel('a [Earth radii]');legend(objectIDlabels,'Location','northeast');
