@@ -12,17 +12,19 @@ This code is licensed under the GNU General Public License version 3 - see the [
 
 
 ### Acknowledgments
-Initial versions of the code were based on work by Dr. Piyush M. Mehta, see https://doi.org/10.2514/1.G004793.
+Initial work on the code were performed by Dr. Piyush M. Mehta, see https://doi.org/10.2514/1.G004793.
 
 The MATLAB code for the Jacchia-Bowman 2008 model and solar radiation pressure and third-body perturbations was developed by Meysam Mahooti (copyright 2018) and was downloaded from https://www.mathworks.com/matlabcentral/fileexchange/56163-jacchia-bowman-atmospheric-density-model (version 2.0.0.0) and https://www.mathworks.com/matlabcentral/fileexchange/55167-high-precision-orbit-propagator (version 2.1.1.1).
 
 The MATLAB code for the SGP4 model and several time and reference frame routines was developed by David Vallado (and others) and was downloaded from https://celestrak.com/software/vallado-sw.php.
 
+The Earth Gravitational Model 2008 (EGM2008) coefficients were obtained from the NGA's Office of Geomatics: https://earth-info.nga.mil.
+
 
 ### References
-The density modeling and estimation techniques using two-line element data are described in:
+The code in this repository corresponds to two publications in Space Weather. The density modeling and estimation techniques using two-line element data are described in:
 ```
-@article{gondelach2019realtime,
+@article{gondelach2020tle,
   author = {Gondelach, David J. and Linares, Richard},
   title = {Real-Time Thermospheric Density Estimation Via Two-Line-Element Data Assimilation},
   journal = {Space Weather},
@@ -30,7 +32,19 @@ The density modeling and estimation techniques using two-line element data are d
   url = {https://doi.org/10.1029/2019SW002356}
 }
 ```
-see https://doi.org/10.1029/2019SW002356 or https://arxiv.org/abs/1910.00695.
+see https://doi.org/10.1029/2019SW002356.
+
+The thermospheric density estimation using radar range and range-rate measurements and GPS position measurements is described in:
+```
+@article{gondelach2021radargps,
+  author = {Gondelach, David J. and Linares, Richard},
+  title = {Real‐Time Thermospheric Density Estimation Via Radar And GPS Tracking Data Assimilation},
+  journal = {Space Weather},
+  doi = {10.1029/2020SW002620},
+  url = {https://doi.org/10.1029/2020SW002620}
+}
+```
+see https://doi.org/10.1029/2020SW002620.
 
 ### Installation instructions
 1. Download the DensityEstimation Matlab code
@@ -70,5 +84,5 @@ MATLAB R2018b (Version 9.5) was used to develop the code.
 The latest version is this toolbox may be found on: https://github.com/davidgondelach/DESTO
 
 
-David Gondelach, Aug 2020
+David Gondelach, April 2021
 email: davidgondelach@gmail.com
