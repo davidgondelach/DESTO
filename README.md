@@ -1,4 +1,4 @@
-# DESTO
+# DESTO - Density Estimation Toolbox
 The Density Estimation Toolbox (DESTO) is a complete toolbox for Matlab that enables you to estimate the global thermospheric density using GPS, radar or two-line-element (TLE) data. In addition, three different reduced-order density models can be employed for the estimation. 
 
 Copyright © 2021 by David Gondelach and Richard Linares
@@ -27,6 +27,9 @@ The code in this repository corresponds to two publications in the AGU journal S
   author = {Gondelach, David J. and Linares, Richard},
   title = {Real-Time Thermospheric Density Estimation Via Two-Line-Element Data Assimilation},
   journal = {Space Weather},
+  volume = {18},
+  number = {2},
+  pages = {e2019SW002356},
   doi = {10.1029/2019SW002356},
   url = {https://doi.org/10.1029/2019SW002356}
 }
