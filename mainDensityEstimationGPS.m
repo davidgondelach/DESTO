@@ -1,6 +1,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                                                                           %
-%  Thermospheric Density Estimation Via Two-Line-Element Data Assimilation  %
+%   Thermospheric Density Estimation Via GPS Tracking Data Assimilation     %
 %                                                                           %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
@@ -25,7 +25,7 @@
 %  Jan 2020; Last revision: 01-Mar-2021
 %
 %  Reference:
-%  D.J. Gondelach and R. Linares, "Real‐Time Thermospheric Density 
+%  D.J. Gondelach and R. Linares, "Real-Time Thermospheric Density 
 %  Estimation Via Radar And GPS Tracking Data Assimilation", Space Weather, 2021
 %  https://doi.org/10.1029/2020SW002620
 % 
@@ -42,7 +42,6 @@ clearvars -global;
 % used to estimation here.
 
 % Estimation window
-% Continuous data from:2020-01-03T06:03:06.870935 , till:2020-01-28T06:10:43.642242
 yr      = 2020; % Year
 mth     = 5;    % Month
 dy      = 1;    % Day
@@ -59,9 +58,8 @@ ROMmodel = 'JB2008_1999_2010';  % Name of reduced-order density model: JB2008_19
 r  = 10;                        % Reduced order
 
 % NORAD catalog IDs of objects used for estimation
-% selectedObjects = [41771,41773,41774,42987,42988,42989,42990,42992,43797,43802]; % GPS: 10 Planet Skysats : May 1-30
-selectedObjects = [41771,41773,42987,42988,43802]; % GPS: 5 Planet Skysats : May 1-30
-
+% selectedObjects = [41771,41773,42987,42988,43802]; % GPS: 5 Planet Skysats : May 1-30
+selectedObjects = [41771,41773,41774,42987,42988,42989,42990,42992,43797,43802]; % GPS: 10 Planet Skysats : May 1-30
 selectedObjects = sortrows(selectedObjects);
 
 % Display date
@@ -69,9 +67,11 @@ datetime(yr,mth,dy)
 
 %% SET PATHS
 % *** SPECIFY YOUR SPICE TOOLBOX DIRECTORY HERE! ***
-spicePath = fullfile('[SPICE TOOLKIT DIRECTORY]','mice'); 
+spicePath = fullfile('[SPICE TOOLKIT DIRECTORY]','mice');
 global resultsDirPath gpsDataPath
+% *** SPECIFY OUTPUT DIRECTORY HERE! ***
 resultsDirPath = fullfile('[RESULTS DIRECTORY]');
+% *** SPECIFY FOLDER WITH PLANET LABS GPS DATA HERE! ***
 gpsDataPath = fullfile('[GPS DATA DIRECTORY]');
 
 addpath( 'AstroFunctions' );

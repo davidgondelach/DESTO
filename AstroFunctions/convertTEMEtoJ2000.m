@@ -19,7 +19,7 @@ timezone = 0;
          = convtime ( year, mon, day, hr, min, sec, timezone, dut1, dat );
 
 
-[reci, veci, ~] = teme2eciNew(rteme, vteme, zeros(3,1), ttt, ddpsi, ddeps);
+[reci, veci, ~] = teme2eci(rteme, vteme, zeros(3,1), ttt, ddpsi, ddeps);
 
 end
 

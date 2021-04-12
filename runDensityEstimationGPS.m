@@ -1,55 +1,60 @@
 function runDensityEstimationGPS(yr,mth,dy,hr,mn,sc,nofDays,ROMmodel,r,selectedObjects,varargin)
-%runDensityEstimationTLE - Estimate thermospheric density using TLE data.
-% 
-%  runDensityEstimationTLE(yr,mth,dy,nofDays,ROMmodel,r,selectedObjects) -
-%     Estimate thermospheric density using TLE data: 
-%     1) load TLE data, 2) load ballistic coefficient data, 3) generate 
-%     observations from TLE data, 4) generate reduced-order density model,
+%runDensityEstimationGPS - Estimate thermospheric density using GPS data.
+%
+%  runDensityEstimationGPS(yr,mth,dy,hr,mn,sc,nofDays,ROMmodel,r,selectedObjects) -
+%     Estimate thermospheric density using GPS data:
+%     1) load GPS data, 2) load ballistic coefficient data, 3) generate
+%     observations from GPS data, 4) generate reduced-order density model,
 %     5) initialize reduced-order density state, 6) set initial orbital
-%     state guesses, 7) set measurement and process noise, 8) set initial  
+%     state guesses, 7) set measurement and process noise, 8) set initial
 %     state covariance, 9) run unscented Kalman filter to simultaneously
 %     estimate the orbital states, ballistic coefficients and thermospheric
-%     density from TLE-derived orbit observations.
-% 
-%  runDensityEstimationTLE(yr,mth,dy,nofDays,ROMmodel,r,selectedObjects,plotFigures)
-%     Estimate thermospheric density using TLE data and plot results.
-% 
+%     density from GPS measurements.
+%     This code is intended to use GPS data provided by Planet Labs Inc.
+%
+%  runDensityEstimationGPS(yr,mth,dy,hr,mn,sc,nofDays,ROMmodel,r,selectedObjects,plotFigures)
+%     Estimate thermospheric density using GPS data and plot results.
+%
 %     yr                - start date: year
 %     mth               - start date: month
 %     dy                - start date: day
+%     hr                - start time: hour
+%     mn                - start time: minute
+%     sc                - start time: seconds
 %     nofDays           - number of days of estimation window
 %     ROMmodel          - name of reduced-order density model
 %     r                 - dimension of reduced-order density model
 %     selectedObjects   - NORAD IDs of objects used for estimation
 %     plotFigures       - boolean: if true then plot results
 %
-% 
-%     Copyright (C) 2021 by David Gondelach
-% 
+%
+%  Copyright (C) 2021 by David Gondelach
+%
 %     This program is free software: you can redistribute it and/or modify
 %     it under the terms of the GNU General Public License as published by
 %     the Free Software Foundation, either version 3 of the License, or
 %     (at your option) any later version.
-% 
+%
 %     This program is distributed in the hope that it will be useful,
 %     but WITHOUT ANY WARRANTY; without even the implied warranty of
 %     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 %     GNU General Public License for more details.
-% 
+%
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-% 
-% 
+%
+%
 %  Author: David Gondelach
 %  Massachusetts Institute of Technology, Dept. of Aeronautics and Astronautics
 %  email: davidgondelach@gmail.com
-%  Jun 2020; Last revision: 03-Aug-2020
+%  Jun 2020; Last revision: 31-Aug-2020
 %
 %  Reference:
-%  D.J. Gondelach and R. Linares, "Real-Time Thermospheric Density
-%  Estimation Via Two-Line-Element Data Assimilation", Space Weather, 2020
-%  https://doi.org/10.1029/2019SW002356 or https://arxiv.org/abs/1910.00695
-% 
+%  D.J. Gondelach and R. Linares,
+%  "Real-Time Thermospheric Density Estimation Via Radar And GPS Tracking
+%  Data Assimilation", Space Weather, 2021
+%  https://doi.org/10.1029/2020SW002620
+%
 
 %------------- BEGIN CODE --------------
 
@@ -77,8 +82,8 @@ try
     jd0 = juliandate(datetime(yr,mth,dy,hr,mn,sc));
     jdf = juliandate(datetime(yr,mth,dy+nofDays,hr,mn,sc));
     
-    % Initial Ephemeris Time (ET): ET is the number of seconds past the 
-    % epoch of the J2000 reference frame in the time system known as 
+    % Initial Ephemeris Time (ET): ET is the number of seconds past the
+    % epoch of the J2000 reference frame in the time system known as
     % Barycentric Dynamical Time (TDB).
     et0  = cspice_str2et(strcat([num2str(jed2date(jd0),'%d %d %d %d %d %.10f') 'UTC']));
     etf  = cspice_str2et(strcat([num2str(jed2date(jdf),'%d %d %d %d %d %.10f') 'UTC']));
@@ -109,9 +114,6 @@ try
         ID = selectedObjects(i);
         % Ballistic coefficient
         BCestimates(i) = BCdata(BCdata(:,1)==ID,2);
-        % Skysat BC estimate:
-%         BCestimates(i) = 0.01376 * (1 + randn(1)*BCerror); % Old assumed BC estimate for Skysats
-%         BCestimates(i) = 0.01626; % New debiased BC estimate for Skysats
     end
     
     % Number of objects
@@ -122,9 +124,6 @@ try
     for i=1:nop
         objectIDlabels(i) = {num2str(selectedObjects(i))};
     end
-
-
-    useMEE = true;
     
     %% Get GPS measurements
     global gpsDataPath
@@ -156,7 +155,7 @@ try
     
     % Initial position and velocity covariance
     P_GPS = diag( [0.04 0.04 0.04 2e-4 2e-4 2e-4].^2 ); % position 1-sigma = 40m, velocity 1-sigma = 0.2 m/s
-
+    
     for i = 1:nop
         % Get initial position and velocity from propagated GPS state
         [posVelAtET0] = getPositionVelocityFromGPSmeas(gpsDataPath,selectedObjects(i),BCestimates(i),et0);
@@ -171,7 +170,7 @@ try
         % Initial variance for ballistic coefficient
         Pv(svs*(i-1)+7) = (x0g(svs*i) * BCerror)^2;
     end
-
+    
     
     % Compute the initial atmosphere state from JB2008 density model
     % Seconds of day in UTC
@@ -202,40 +201,17 @@ try
     
     Qv = zeros(svs*nop+r,1); % process variance
     for i = 1:nop
-        if useMEE
-            
-            % Process noise for orbital state in MEE for 1 hour            
-%             Qv(svs*(i-1)+1) = 1.5e-08;
-%             Qv(svs*(i-1)+2) = 3.2e-13;
-%             Qv(svs*(i-1)+3) = 3.2e-13;
-%             Qv(svs*(i-1)+4) = 4.0e-14;
-%             Qv(svs*(i-1)+5) = 4.0e-14;
-%             Qv(svs*(i-1)+6) = 4.0e-14;
-            
-            % Process noise for orbital state in MEE for 1 hour converted to per second
-            Qv(svs*(i-1)+1) = 2.0e-15; %1.953125e-15;
-            Qv(svs*(i-1)+2) = 4.2e-20; %4.16666666666667e-20;
-            Qv(svs*(i-1)+3) = 4.2e-20; %4.16666666666667e-20;
-            Qv(svs*(i-1)+4) = 5.2e-21; %5.20833333333333e-21;
-            Qv(svs*(i-1)+5) = 5.2e-21; %5.20833333333333e-21;
-            Qv(svs*(i-1)+6) = 5.2e-21; %1.30208333333333e-21;
-        else
-            P_GPS = diag( [0.04 0.04 0.04 2e-4 2e-4 2e-4].^2 ); % position 1-sigma = 40m, velocity 1-sigma = 0.2 m/s
-            
-            Pv(svs*(i-1)+1:svs*(i-1)+6) = diag(P_GPS);
-            
-            % Process noise for position and velocity (~ MEE covariance
-            % converted to position and velocity)
-            Qv(svs*(i-1)+1) = 2e-5;
-            Qv(svs*(i-1)+2) = 2e-5;
-            Qv(svs*(i-1)+3) = 2e-5;
-            Qv(svs*(i-1)+4) = 2e-11;
-            Qv(svs*(i-1)+5) = 2e-11;
-            Qv(svs*(i-1)+6) = 2e-11;
-        end
         
-        % Process noise for ballistic coefficient
-        Qv(svs*(i-1)+7) = 2.7e-20; % 1-sigma error: 1e-8 per 1 hour => cov: 1e-16/3600 = 2.7e-20 per second
+        % Process noise for orbital state in MEE per second
+        Qv(svs*(i-1)+1) = 2.0e-15;
+        Qv(svs*(i-1)+2) = 4.2e-20;
+        Qv(svs*(i-1)+3) = 4.2e-20;
+        Qv(svs*(i-1)+4) = 5.2e-21;
+        Qv(svs*(i-1)+5) = 5.2e-21;
+        Qv(svs*(i-1)+6) = 5.2e-21;
+        
+        % Process noise for ballistic coefficient per second
+        Qv(svs*(i-1)+7) = 2.7e-20;
     end
     
     % Initial variance for reduced-order density state
@@ -256,18 +232,14 @@ try
     % State estimate
     X_est = x0g; % Initial state guess
     
-    % Set state propagation and measurement functions
-    if useMEE
-        stateFnc = @(xx,t0,tf) propagateState_MeeBcRom(xx,t0,tf,AC,BC,SWinputs,r,nop,svs,F_U,M_U,maxAtmAlt,et0,jd0,highFidelity);
-    else
-        stateFnc = @(xx,t0,tf) propagateState_PosVelBcRom(xx,t0,tf,AC,BC,SWinputs,r,nop,svs,F_U,M_U,maxAtmAlt,et0,jd0);
-    end
+    % Set state propagation function
+    stateFnc = @(xx,t0,tf) propagateState_MeeBcRom(xx,t0,tf,AC,BC,SWinputs,r,nop,svs,F_U,M_U,maxAtmAlt,et0,jd0,highFidelity);
     
     % Measurement and residual function
     state2measurementFcn = @(xx,meas) extractSinglePosition(xx,meas,svs,GM_kms); % Function to get position of single object without BC or ROM state
     residualFcn = @(ym,meas) getResidualDefault(ym,meas);
     
-    % Run Unscented Kalman filter estimation
+    % Measurement times since start epoch
     time = measEpochs - et0;
     % Always start at zero
     if time(1) ~= 0
@@ -275,13 +247,15 @@ try
         % Add dummy measurement at t0
         Meas = [zeros(size(Meas,1),1), Meas];
     end
-    [X_est,Pv,X_pred] = UKFsingleMeasurements_newProcessNoise(X_est,Meas,time,stateFnc,state2measurementFcn,residualFcn,P,RM,Q,svs,r,useMEE);
     
+    % Run Unscented Kalman filter estimation
+    [X_est,Pv,X_pred] = UKFsingleMeasurements_newProcessNoise(X_est,Meas,time,stateFnc,state2measurementFcn,residualFcn,P,RM,Q,svs,r);
+    
+    % Save workspace
     global resultsDirPath
     nowTimeStr = datestr(now,'yymmddHHMMSS');
     filenameBase = [resultsDirPath 'ukf_rom_gps_' ROMmodel '_'];
     testCaseName = [sprintf('%04d',yr), sprintf('%02d',mth), sprintf('%02d',dy), '_', num2str(nofDays) 'd_', num2str(nop), 'obj_'];
-    
     save([filenameBase 'workspace_' testCaseName nowTimeStr]);
     
     %% Plot results
@@ -352,62 +326,60 @@ try
         subplot(2,3,6); xlabel('Time [hours]'); ylabel('\sigma_L [rad]');
         savefig(meeCovPlot,[filenameBase 'MEEcov_' testCaseName nowTimeStr '.fig']);
         %%
-        if useMEE
-            % Plot position errors w.r.t. measurements
-            posPlot = figure;
-            for k = 1:nop
-                objIndices = find(Meas(1,:)==k);
-
-                xx_pv_est = zeros(3,length(objIndices));
-                xx_pv_pred = zeros(3,length(objIndices));
-                xx_pv_meas = zeros(3,length(objIndices));
-                posDiff_post_RTN = zeros(3,length(objIndices));
-                posDiff_pre_RTN = zeros(3,length(objIndices));
-                posDiff_pre = zeros(3,length(objIndices));
-                posCov = zeros(3,length(objIndices));
-                posCovRTN = zeros(3,length(objIndices));
-                for j=1:length(objIndices)
-                    objI = objIndices(j);
-                    [pos_est,vel_est] = ep2pv(X_est((k-1)*svs+1:(k-1)*svs+6,objI),GM_kms);
-                    xx_pv_est(1:3,j) = pos_est;
-                    [pos_pred,~] = ep2pv(X_pred((k-1)*svs+1:(k-1)*svs+6,objI),GM_kms);
-                    xx_pv_pred(1:3,j) = pos_pred;
-                    xx_pv_meas(1:3,j) = Meas(2:end,objI);
-                    
-                    posDiff_post = (xx_pv_est(1:3,j)-xx_pv_meas(1:3,j));
-                    posDiff_pre(:,j) = (xx_pv_pred(1:3,j)-xx_pv_meas(1:3,j));
-                    
-                    [cart2rtnMatrix] = computeCart2RTNMatrix(pos_est, vel_est);
-                    posDiff_post_RTN(:,j) = cart2rtnMatrix*posDiff_post;
-                    posDiff_pre_RTN(:,j) = cart2rtnMatrix*posDiff_pre(:,j);
-                    
-                    meeCov = diag(Pv((k-1)*svs+1:(k-1)*svs+6,objI));
-                    [~,posVelCov] = meeCov2cartCov(X_est((k-1)*svs+1:(k-1)*svs+6,objI),meeCov,GM_kms);
-                    posCov(:,j) = diag(posVelCov(1:3,1:3));
-                    posCovRTNfull = cart2rtnMatrix*posVelCov(1:3,1:3)*cart2rtnMatrix';
-                    posCovRTN(:,j) = diag(posCovRTNfull);
-                end
-                posErrors_post = sqrt(sum( (xx_pv_est(1:3,:)-xx_pv_meas(1:3,:)) .^2,1));
-                posErrors_pre = sqrt(sum( (xx_pv_pred(1:3,:)-xx_pv_meas(1:3,:)) .^2,1));
-                subplot(ceil(nop),2,k*2-1)
-                plot(time(objIndices)/3600,posErrors_post); hold on;
-                subplot(ceil(nop),2,k*2)
-                plot(time(objIndices)/3600,posErrors_pre,'Color',Colors(4,:)); hold on;
-                plot(time(objIndices)/3600,posDiff_pre_RTN(1,:),'Color',Colors(1,:)); hold on;
-                plot(time(objIndices)/3600,posDiff_pre_RTN(2,:),'Color',Colors(2,:)); hold on;
-                plot(time(objIndices)/3600,posDiff_pre_RTN(3,:),'Color',Colors(3,:)); hold on;
-                plot(time(objIndices)/3600,2*(sqrt(posCovRTN(1,:))),'--','Color',Colors(1,:)); hold on;
-                plot(time(objIndices)/3600,2*(sqrt(posCovRTN(2,:))),'--','Color',Colors(2,:)); hold on;
-                plot(time(objIndices)/3600,2*(sqrt(posCovRTN(3,:))),'--','Color',Colors(3,:)); hold on;
-                plot(time(objIndices)/3600,-2*(sqrt(posCovRTN(1,:))),'--','Color',Colors(1,:)); hold on;
-                plot(time(objIndices)/3600,-2*(sqrt(posCovRTN(2,:))),'--','Color',Colors(2,:)); hold on;
-                plot(time(objIndices)/3600,-2*(sqrt(posCovRTN(3,:))),'--','Color',Colors(3,:)); hold on;
-                xlabel('Time, hrs');ylabel('Position error [km]');
-                title(sprintf('Orbit %.0f, mean= %.4f',selectedObjects(k),mean(posErrors_post)));
+        % Plot position errors w.r.t. measurements
+        posPlot = figure;
+        for k = 1:nop
+            objIndices = find(Meas(1,:)==k);
+            
+            xx_pv_est = zeros(3,length(objIndices));
+            xx_pv_pred = zeros(3,length(objIndices));
+            xx_pv_meas = zeros(3,length(objIndices));
+            posDiff_post_RTN = zeros(3,length(objIndices));
+            posDiff_pre_RTN = zeros(3,length(objIndices));
+            posDiff_pre = zeros(3,length(objIndices));
+            posCov = zeros(3,length(objIndices));
+            posCovRTN = zeros(3,length(objIndices));
+            for j=1:length(objIndices)
+                objI = objIndices(j);
+                [pos_est,vel_est] = ep2pv(X_est((k-1)*svs+1:(k-1)*svs+6,objI),GM_kms);
+                xx_pv_est(1:3,j) = pos_est;
+                [pos_pred,~] = ep2pv(X_pred((k-1)*svs+1:(k-1)*svs+6,objI),GM_kms);
+                xx_pv_pred(1:3,j) = pos_pred;
+                xx_pv_meas(1:3,j) = Meas(2:end,objI);
+                
+                posDiff_post = (xx_pv_est(1:3,j)-xx_pv_meas(1:3,j));
+                posDiff_pre(:,j) = (xx_pv_pred(1:3,j)-xx_pv_meas(1:3,j));
+                
+                [cart2rtnMatrix] = computeCart2RTNMatrix(pos_est, vel_est);
+                posDiff_post_RTN(:,j) = cart2rtnMatrix*posDiff_post;
+                posDiff_pre_RTN(:,j) = cart2rtnMatrix*posDiff_pre(:,j);
+                
+                meeCov = diag(Pv((k-1)*svs+1:(k-1)*svs+6,objI));
+                [~,posVelCov] = meeCov2cartCov(X_est((k-1)*svs+1:(k-1)*svs+6,objI),meeCov,GM_kms);
+                posCov(:,j) = diag(posVelCov(1:3,1:3));
+                posCovRTNfull = cart2rtnMatrix*posVelCov(1:3,1:3)*cart2rtnMatrix';
+                posCovRTN(:,j) = diag(posCovRTNfull);
             end
-            savefig(posPlot,[filenameBase 'posErr_' testCaseName nowTimeStr '_RTN_2sigma.fig']);
-
+            posErrors_post = sqrt(sum( (xx_pv_est(1:3,:)-xx_pv_meas(1:3,:)) .^2,1));
+            posErrors_pre = sqrt(sum( (xx_pv_pred(1:3,:)-xx_pv_meas(1:3,:)) .^2,1));
+            subplot(ceil(nop),2,k*2-1)
+            plot(time(objIndices)/3600,posErrors_post); hold on;
+            subplot(ceil(nop),2,k*2)
+            plot(time(objIndices)/3600,posErrors_pre,'Color',Colors(4,:)); hold on;
+            plot(time(objIndices)/3600,posDiff_pre_RTN(1,:),'Color',Colors(1,:)); hold on;
+            plot(time(objIndices)/3600,posDiff_pre_RTN(2,:),'Color',Colors(2,:)); hold on;
+            plot(time(objIndices)/3600,posDiff_pre_RTN(3,:),'Color',Colors(3,:)); hold on;
+            plot(time(objIndices)/3600,2*(sqrt(posCovRTN(1,:))),'--','Color',Colors(1,:)); hold on;
+            plot(time(objIndices)/3600,2*(sqrt(posCovRTN(2,:))),'--','Color',Colors(2,:)); hold on;
+            plot(time(objIndices)/3600,2*(sqrt(posCovRTN(3,:))),'--','Color',Colors(3,:)); hold on;
+            plot(time(objIndices)/3600,-2*(sqrt(posCovRTN(1,:))),'--','Color',Colors(1,:)); hold on;
+            plot(time(objIndices)/3600,-2*(sqrt(posCovRTN(2,:))),'--','Color',Colors(2,:)); hold on;
+            plot(time(objIndices)/3600,-2*(sqrt(posCovRTN(3,:))),'--','Color',Colors(3,:)); hold on;
+            xlabel('Time, hrs');ylabel('Position error [km]');
+            title(sprintf('Orbit %.0f, mean= %.4f',selectedObjects(k),mean(posErrors_post)));
         end
+        savefig(posPlot,[filenameBase 'posErr_' testCaseName nowTimeStr '_RTN_2sigma.fig']);
+        
         
         % Plot estimated density and uncertainty on local solar time v latitude grid
         slt_plot = 0:0.5:24;

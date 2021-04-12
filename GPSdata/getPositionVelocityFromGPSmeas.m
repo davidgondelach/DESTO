@@ -1,4 +1,18 @@
 function [posVelAtET0] = getPositionVelocityFromGPSmeas(gpsDataPath,object,BC,et0)
+%getPositionVelocityFromGPSmeas - Compute position and velocity for given
+% object at given epoch according to GPS data. Interpolation is achieved 
+% using orbit propagation.
+%
+% Copyright (C) 2021 by David Gondelach
+%
+% This code is licensed under the GNU General Public License version 3.
+%
+% Author: David Gondelach
+% Massachusetts Institute of Technology, Dept. of Aeronautics and Astronautics
+% email: davidgondelach@gmail.com
+% Aug 2020; Last revision: 31-Aug-2020
+
+%------------- BEGIN CODE --------------
 
 % Planet satellites with GPS data
 planetSkysats = struct;
@@ -24,6 +38,7 @@ index = find([planetSkysats.noradID]==object);
 % Get GPS data
 [gpsData] = getGPSdataFromJsonFileET(gpsDataPath,planetSkysats(index).planetID,planetSkysats(index).noradID,et0-86400,et0+86400);
 
+% Get closest GPS measurement
 [~,closestGPSmeas] = min( abs([gpsData(:).tET] - et0) );
 gps_state = gpsData(closestGPSmeas).xx_J2000;
 et_state = gpsData(closestGPSmeas).tET;
@@ -36,6 +51,7 @@ end
 
 stateBC = [gps_state; BC];
 
+% Get position and velocity at given epoch by propagating state
 settingsJB2000.drag=3;
 settingsJB2000.thirdbody = 1;
 opts = odeset('RelTol',1e-10,'AbsTol',1e-10);
@@ -45,3 +61,4 @@ posVelAtET0 = stateBCAtET0(end,1:6)';
 
 end
 
+%------------- END OF CODE --------------

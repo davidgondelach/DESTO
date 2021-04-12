@@ -33,7 +33,9 @@ end
 opts = odeset('RelTol',1e-10,'AbsTol',1e-10,'Events', @(t,x) isdecayed(t,x,nop*size(x0_mee,2),svs));
 if tf-t0 > 10
     [~,xf_out]=ode113(@(t,x) computeDerivative_PosVelBcRom(t,x,AC,BC,SWinputs,r,nop,svs,F_U,M_U,maxAtmAlt,et0,jdate0,highFidelity),[t0 tf],xx_pv,opts);
-else    
+else
+    % If propagation interval is very short (<10 sec), use fixed-stepsize
+    % integrator to speed up integration.
     tt = t0:2:tf;
     if tt(end) ~= tf
         tt = [tt,tf];

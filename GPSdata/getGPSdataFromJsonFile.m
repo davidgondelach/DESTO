@@ -1,5 +1,16 @@
 function [gpsData,gpsfilepath] = getGPSdataFromJsonFile(GPSdataPath,objectPlanetIDstr,objectNORADID,yearStart,monthStart,dayStart,yearEnd,monthEnd,dayEnd)
 % Example:   [xx_GPS_J2000,et,jdate] = getGPSdata('0E0E',2018,1,1,2018,1,5);
+%
+% Copyright (C) 2021 by David Gondelach
+%
+% This code is licensed under the GNU General Public License version 3.
+%
+% Author: David Gondelach
+% Massachusetts Institute of Technology, Dept. of Aeronautics and Astronautics
+% email: davidgondelach@gmail.com
+% Aug 2020; Last revision: 31-Aug-2020
+
+%------------- BEGIN CODE --------------
 
 tStart  = datetime(yearStart,monthStart,dayStart);
 tEnd    = datetime(yearEnd,monthEnd,dayEnd);
@@ -20,3 +31,5 @@ for t=tStart:tEnd
 end
 
 end
+
+%------------- END OF CODE --------------

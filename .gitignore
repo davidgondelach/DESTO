@@ -4,6 +4,10 @@
 /Data/*.tpc
 /Data/*.tls
 /Data/*.tf
+/Data/DTCFILE.txt
+/Data/EOP-All.txt
+/Data/SOLFSMY.txt
+/Data/SW-All.txt
 /TLEdata/*.mat
 /*.mat
 *.tle

@@ -8,15 +8,8 @@ function [X_est,Pv] = UKF(X_est,Meas,time,stateFnc,measurementFcn,P,RM,Q)
 %   P: state covariance matrix
 %   RM: observation noise
 %   Q: process noise
-%
+% 
 % This code is licensed under the GNU General Public License version 3.
-%
-% Based on code by P.M. Mehta, University of Minnesota, 2018
-%
-% Modified by: David Gondelach
-% Massachusetts Institute of Technology, Dept. of Aeronautics and Astronautics
-% email: davidgondelach@gmail.com
-% Jan 2020; Last revision: 31-Jan-2020
 %
 % Reference: Wan, E. A., & Van Der Merwe, R. (2001). The unscented Kalman filter, In: Kalman filtering and neural networks, pp. 221–280.
 %
@@ -39,7 +32,6 @@ try
     
     m = size(Meas,2);
     for i = 1:m-1
-        tic;
         fprintf('%.0f of %.0f \n',i,m-1)
         sigv = real([eta*S -eta*S]);
         xx = [X_est(:,i) sigv+kron(X_est(:,i),ones(1,2*L))];
@@ -91,7 +83,6 @@ try
         
         HH(:,:,i+1) = (pinv(S*S')*KG*RM)';
         Pv(:,i+1) = diag(S*S')';
-        toc
     end
     
 catch errMsg

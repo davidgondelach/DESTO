@@ -1,5 +1,7 @@
 function [objects] = downloadTLEsForEstimation(username, password, startYear, startMonth, startDay, endYear, endMonth, endDay, maxAlt, selectedObjects)
 %downloadTLEsForEstimation - Download TLE data
+% 
+% Copyright (C) 2021 by David Gondelach
 %
 % This code is licensed under the GNU General Public License version 3.
 %

@@ -1,4 +1,4 @@
-function [X_est,Pv,X_pred] = UKFsingleMeasurements_newProcessNoise(X_est,Meas,time,statePredictionFnc,state2measurementFcn,residualFcn,P,RM,Q,svs,r,useMEE)
+function [X_est,Pv,X_pred] = UKFsingleMeasurements_newProcessNoise(X_est,Meas,time,statePredictionFnc,state2measurementFcn,residualFcn,P,RM,Q,svs,r)
 %UKF Square-root Unscented Kalman filter
 %   X_est: initial state guess
 %   Meas: measurements
@@ -8,15 +8,8 @@ function [X_est,Pv,X_pred] = UKFsingleMeasurements_newProcessNoise(X_est,Meas,ti
 %   P: state covariance matrix
 %   RM: observation noise
 %   Q: process noise
-%
+% 
 % This code is licensed under the GNU General Public License version 3.
-%
-% Based on code by P.M. Mehta, University of Minnesota, 2018
-%
-% Modified by: David Gondelach
-% Massachusetts Institute of Technology, Dept. of Aeronautics and Astronautics
-% email: davidgondelach@gmail.com
-% Jan 2020; Last revision: 31-Jan-2020
 %
 % Reference: Wan, E. A., & Van Der Merwe, R. (2001). The unscented Kalman filter, In: Kalman filtering and neural networks, pp. 221–280.
 %
@@ -31,8 +24,10 @@ SR_Wc = sqrt(Wc); SR_Wm = sqrt(Wm);
 S=chol(P)';
 eta = sqrt(L+lam);
 
+% Predicted states history
 X_pred = X_est;
-% Add initial state variance to state variance history
+
+% State variance history
 Pv(:,1) = diag(P);
 
 try
@@ -51,8 +46,7 @@ try
         X_est(:,i+1) = Wm(1) * Xp(:,1) + Wm(2) * sum(Xp(:,2:end),2);
         X_pred(:,i+1) = X_est(:,i+1);
         
-        % Process noise (see
-        % http://www.robots.ox.ac.uk/~ian/Teaching/Estimation/LectureNotes2.pdf)
+        % Process noise
         % Q is process white noise variance
         deltat = time(i+1)-time(i); % prop time in seconds
         Q_dt = zeros(length(Q));
@@ -74,10 +68,6 @@ try
         
         DY = Ym(:,1)-ym; % [nofMeas x 1]
         DY2 = Ym(:,2:end)-kron(ym,ones(1,2*L)); % [nofMeas x nofSigma-1]
-        if useMEE
-            DY(6:6:end) = wrapToPi(DY(6:6:end)); % Wrap difference in true longitude to [-pi,pi]
-            DY2(6:6:end) = wrapToPi(DY2(6:6:end)); % Wrap difference in true longitude to [-pi,pi]
-        end
         
         % Measurement Update
         SR_R = sqrt(diag(diag(RM(:,:,i)))); % measurement noise

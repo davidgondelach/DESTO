@@ -19,9 +19,11 @@ function [aa_grav_x, aa_grav_y, aa_grav_z] = computeEarthGravitationalAccelerati
 %   aa_grav_z - Earth gravitational acceleration in the z-direction of the
 %          Earth-Centered Earth-Fixed coordinates in meters per second
 %          squared [Mx1].
-
+%
 %   References:
 %   Vallado, D. A., "Fundamentals of Astrodynamics and Applications", 2001.
+
+%------------- BEGIN CODE --------------
 
 % Check that number of columns is equal to 3.
 if (size( rr_ecef, 2) ~= 3)
@@ -164,3 +166,5 @@ scaleFactor = sF_gravmod;
     end
 
 end
+
+%------------- END OF CODE --------------

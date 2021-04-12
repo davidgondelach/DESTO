@@ -1,9 +1,11 @@
 function [TLEstruct] = getTLEs(filename)
 %getTLEs - Read TLE data from file and sort on data
+% 
+% Copyright (C) 2021
 %
 % This code is licensed under the GNU General Public License version 3.
 %
-% Based on code by Aleksander Lidtke, University of Southampton, UK, July 2015
+% Initial development of this code by Aleksander Lidtke is acknowledged.
 %
 % Modified by: David Gondelach
 % Massachusetts Institute of Technology, Dept. of Aeronautics and Astronautics
@@ -12,9 +14,9 @@ function [TLEstruct] = getTLEs(filename)
 
 %------------- BEGIN CODE --------------
 
-global whichconst; % The gravity constant that we're using.
+global whichconst;
 
-finput = fullfile(filename); % Open the file for this object. Use OS independent path concatenation.
+finput = fullfile(filename);
 fid = fopen(finput);
 
 %% Check the number of TLEs in the file.
@@ -44,8 +46,7 @@ while ischar(longstr1) && numel(longstr1)~=0 % Read all the TLEs for this object
     longstr2 = fgetl(fid); % Read the second line
 
     satrecs(k) = twoline2rv_edit( whichconst, longstr1, longstr2); % Initialise the satrec.
-%     satrecs(k) = satrec; % Parse this TLE by creating the satrec.
-    EpochsJD(k) = satrecs(k).jdsatepoch; % Need the epochs of the TLEs to sort them before appending to the final struct.
+    EpochsJD(k) = satrecs(k).jdsatepoch;
     noradID(k) = satrecs(k).satnum;
 
     longstr1 = fgetl(fid); % Proceed to the next TLE.
@@ -54,13 +55,14 @@ end
 
 fclose(fid); % Done with the file.
 
-
-noradIDs = unique(noradID);
+% Collect TLEs per object
+noradIDs = unique(noradID); % IDs of objects in TLE file
 for i=1:length(noradIDs)
     object = noradIDs(i);
     objectIndeces = find(noradID==object);
     TLEstruct(i).noradID = object;
     
+    % Sort TLEs by date and add to struct
     objectEpochsJD = EpochsJD(objectIndeces);
     if ~issorted(objectEpochsJD)
         [~,SortedObjectEpochsJDIndices] = sort(objectEpochsJD);

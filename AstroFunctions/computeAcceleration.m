@@ -58,9 +58,6 @@ for i=1:n
         if settings.drag == 1
             % Use reduced-order density model
             [rho] = getDensityROM(rr_sat',et,densityModelData.romStateTime,densityModelData.r,densityModelData.F_U,densityModelData.M_U);
-%         elseif settings.drag == 2
-%             % Use NRLMSISE-00 atmosphere model
-%             [rho] = getDensityNRLMSISE(rr_sat',et);
         elseif settings.drag == 3
             % Use JB2008 atmosphere model
             [rho] = getDensityJB2008(rr_sat',et);

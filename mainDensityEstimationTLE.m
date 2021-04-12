@@ -24,10 +24,14 @@
 %  email: davidgondelach@gmail.com
 %  Jan 2020; Last revision: 31-Aug-2020
 %
-%  Reference:
+%  References:
 %  D.J. Gondelach and R. Linares, "Real-Time Thermospheric Density
 %  Estimation Via Two-Line-Element Data Assimilation", Space Weather, 2020
 %  https://doi.org/10.1029/2019SW002356 or https://arxiv.org/abs/1910.00695
+% 
+%  D.J. Gondelach and R. Linares, "Real-Time Thermospheric Density 
+%  Estimation Via Radar And GPS Tracking Data Assimilation", 
+%  Space Weather, 2021, https://doi.org/10.1029/2020SW002620
 % 
 
 
@@ -55,10 +59,12 @@ ROMmodel = 'JB2008_1999_2010';  % Name of reduced-order density model: JB2008_19
 r  = 10;                        % Reduced order
 
 % NORAD catalog IDs of objects used for estimation
-% Default: 17 objects: [63;165;614;2153;2622;4221;6073;7337;8744;12138;12388;14483;20774;23278;27391;27392;26405]
+% 17 objects: 2003 and 2007
 selectedObjects = [63;165;614;2153;2622;4221;6073;7337;8744;12138;12388;14483;20774;23278;27391;27392;26405];
-selectedObjects = [41771,41773,41774,42987,42988,42989,42990,42992,43797,43802]; % GPS: 10 Planet Skysats : May 1-30
-selectedObjects = [614;2153;2622;4221;12138;750;2016;2389;6073;7337;8744;12388;14483;20774;23278]; % Radar: Jan 3-28
+% 10 Planet Skysats : May 1-30, 2020
+selectedObjects = [41771,41773,41774,42987,42988,42989,42990,42992,43797,43802];
+% 20 objects : Jan 3-28, 2020
+selectedObjects = [22;614;932;1807;2153;2389;4221;4382;7337;8744;12138;12388;14483;20774;23278;41771;41772;41773;42989;43797];
 selectedObjects = sortrows(selectedObjects);
 
 % Display date
@@ -68,6 +74,9 @@ datetime(yr,mth,dy)
 %% SET PATHS
 % *** SPECIFY YOUR SPICE TOOLBOX DIRECTORY HERE! ***
 spicePath = fullfile('[SPICE TOOLKIT DIRECTORY]','mice'); 
+global resultsDirPath
+% *** SPECIFY OUTPUT DIRECTORY HERE! ***
+resultsDirPath = fullfile('[RESULTS DIRECTORY]');
 
 addpath( 'AstroFunctions' );
 addpath( 'Estimation' );

@@ -9,7 +9,11 @@ function [GM, Re, maxdeg, C_grav, S_grav, sF_grav]= initgravitysphericalharmonic
 %
 %   Inputs:
 %   DEGREE   :a scalar value specifying the degree and order of the
-%            harmonic gravity model. 
+%            harmonic gravity model.
+%
+%  This code is licensed under the GNU General Public License version 3.
+
+%------------- BEGIN CODE --------------
 
 load('EGM2008.mat','GM', 'Re', 'degree', 'C', 'S'); % [GM, Re, degree, C, S]
 
@@ -55,3 +59,5 @@ sF_grav = loc_gravLegendre_scaleFactor(maxdeg);
     end
 
 end
+
+%------------- END OF CODE --------------

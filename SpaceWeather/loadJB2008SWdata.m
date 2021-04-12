@@ -4,6 +4,8 @@ function [eopdata,SOLdata,DTCdata] = loadJB2008SWdata()
 %
 %  Copyright (C) 2021 by David Gondelach
 %
+% This code is licensed under the GNU General Public License version 3.
+%
 % Author: David Gondelach
 % Massachusetts Institute of Technology, Dept. of Aeronautics and Astronautics
 % email: davidgondelach@gmail.com

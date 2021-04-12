@@ -1,4 +1,17 @@
 function [gpsMeas] = getGPSpositionMeasurements(gpsDataPath,selectedObjects,et0,etf)
+%getGPSpositionMeasurements - Load GPS data for given object for given date
+% range and return position data in struct.
+% 
+% Copyright (C) 2021 by David Gondelach
+%
+% This code is licensed under the GNU General Public License version 3.
+%
+% Author: David Gondelach
+% Massachusetts Institute of Technology, Dept. of Aeronautics and Astronautics
+% email: davidgondelach@gmail.com
+% Aug 2020; Last revision: 31-Aug-2020
+
+%------------- BEGIN CODE --------------
 
 % Planet satellites with GPS data
 planetSkysats = struct;
@@ -26,6 +39,8 @@ for i=1:length(selectedObjects)
     % Get GPS data
     [gpsData] = getGPSdataFromJsonFileET(gpsDataPath,planetSkysats(index).planetID,planetSkysats(index).noradID,et0,etf);
     
+    % Filter out measurements that are closer than 80 seconds from each
+    % other
     % Remove half of measurements closer than 5 seconds from each other
     smallerThan5sec = find(diff([gpsData(:).tET]) <= 5);
     gpsData(smallerThan5sec(1:2:end)) = [];
@@ -54,9 +69,10 @@ for i=1:length(selectedObjects)
     gpsMeas = [gpsMeas, gpsMeasObject];
 end
 
-% Sort measurements on epoch
+% Sort measurements by epoch
 [~, order] = sort(gpsMeas(1,:));
 gpsMeas = gpsMeas(:,order);
 
 end
 
+%------------- END OF CODE --------------

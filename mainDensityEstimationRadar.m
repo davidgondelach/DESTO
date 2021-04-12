@@ -1,6 +1,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                                                                           %
-%  Thermospheric Density Estimation Via Two-Line-Element Data Assimilation  %
+%  Thermospheric Density Estimation Via Radar Tracking Data Assimilation    %
 %                                                                           %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
@@ -25,7 +25,7 @@
 %  Jan 2020; Last revision: 01-Mar-2021
 %
 %  Reference:
-%  D.J. Gondelach and R. Linares, "Real‐Time Thermospheric Density 
+%  D.J. Gondelach and R. Linares, "Real-Time Thermospheric Density 
 %  Estimation Via Radar And GPS Tracking Data Assimilation", Space Weather, 2021
 %  https://doi.org/10.1029/2020SW002620
 % 
@@ -42,7 +42,6 @@ clearvars -global;
 % used to estimation here.
 
 % Estimation window
-% Continuous data from:2020-01-03T06:03:06.870935 , till:2020-01-28T06:10:43.642242
 yr      = 2020; % Year
 mth     = 1;    % Month
 dy      = 3;    % Day
@@ -59,8 +58,7 @@ ROMmodel = 'JB2008_1999_2010';  % Name of reduced-order density model: JB2008_19
 r  = 10;                        % Reduced order
 
 % NORAD catalog IDs of objects used for estimation
-selectedObjects = [614;2153;2389;2622;4221;7337;8744;12138;12388;14483;20774;23278; 22;932;1807;4382;41771;41772;41773;42989;43797]; % Radar: 21 objects
-
+selectedObjects = [22;614;932;1807;2153;2389;4221;4382;7337;8744;12138;12388;14483;20774;23278;41771;41772;41773;42989;43797]; % Radar: 20 objects
 selectedObjects = sortrows(selectedObjects);
 
 % Display date
@@ -68,12 +66,12 @@ datetime(yr,mth,dy)
 
 %% SET PATHS
 % *** SPECIFY YOUR SPICE TOOLBOX DIRECTORY HERE! ***
-% spicePath = fullfile('[SPICE TOOLKIT DIRECTORY]','mice'); 
-spicePath = fullfile('/Users/davidgondelach/Documents','mice'); 
-global resultsDirPath ephemerisPath measurementsPath
-resultsDirPath = ['/Users/davidgondelach/Google Drive/PostDoc/DensityEstimation/RadarObs/',ROMmodel,'/'];
-ephemerisPath = '/Users/davidgondelach/Documents/RadarData/LeoLabsEphemeris';
-measurementsPath = '/Users/davidgondelach/Documents/RadarData/LeoLabsData/';
+spicePath = fullfile('[SPICE TOOLKIT DIRECTORY]','mice'); 
+global resultsDirPath measurementsPath
+% *** SPECIFY OUTPUT DIRECTORY HERE! ***
+resultsDirPath = fullfile('[RESULTS DIRECTORY]');
+% *** SPECIFY FOLDER WITH LEOLABS MEASUREMENT DATA HERE! ***
+measurementsPath = fullfile('[RADAR DATA DIRECTORY]');
 
 addpath( 'AstroFunctions' );
 addpath( 'Estimation' );
